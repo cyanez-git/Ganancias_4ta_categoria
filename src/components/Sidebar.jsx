@@ -8,7 +8,7 @@ const NAV_ITEMS = [
     { id: 'guia', icon: '📖', label: 'Guía de Ayuda' },
 ];
 
-export default function Sidebar({ activeView, setActiveView, isOpen, onClose, exportData, importData, resetAllData }) {
+export default function Sidebar({ activeView, setActiveView, isOpen, onClose, exportData, importData, resetAllData, generatePDF }) {
     const fileInputRef = useRef(null);
 
     const handleImport = (e) => {
@@ -51,6 +51,9 @@ export default function Sidebar({ activeView, setActiveView, isOpen, onClose, ex
 
             <div className="sidebar-footer">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <button className="btn btn-primary btn-sm" onClick={generatePDF}>
+                        📄 Informe PDF
+                    </button>
                     <button className="btn btn-ghost btn-sm" onClick={exportData}>
                         📥 Exportar JSON
                     </button>

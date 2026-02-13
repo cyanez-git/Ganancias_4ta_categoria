@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { MONTHS_SHORT } from '../engine/defaultParams';
 import { formatCurrency, formatPercent } from '../engine/calculationEngine';
+import { generatePDFReport } from '../engine/pdfReportGenerator';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -68,7 +69,7 @@ const chartDefaults = {
     },
 };
 
-export default function Dashboard({ results, config }) {
+export default function Dashboard({ results, config, params }) {
     const totals = useMemo(() => {
         let totalRetenido = 0;
         let totalBruto = 0;
@@ -172,9 +173,18 @@ export default function Dashboard({ results, config }) {
 
     return (
         <div>
-            <div className="page-header">
-                <h1>📊 Dashboard</h1>
-                <p className="subtitle">Resumen general del ejercicio fiscal 2025</p>
+            <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                    <h1>📊 Dashboard</h1>
+                    <p className="subtitle">Resumen general del ejercicio fiscal 2025</p>
+                </div>
+                <button
+                    className="btn btn-primary"
+                    onClick={() => generatePDFReport(results, config, params)}
+                    style={{ whiteSpace: 'nowrap' }}
+                >
+                    📄 Generar Informe PDF
+                </button>
             </div>
 
             {/* KPIs */}

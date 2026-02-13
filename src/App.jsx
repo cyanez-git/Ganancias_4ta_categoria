@@ -6,6 +6,7 @@ import LiquidacionMensual from './components/LiquidacionMensual';
 import ConfigPersonal from './components/ConfigPersonal';
 import ConfigParametros from './components/ConfigParametros';
 import GuiaAyuda from './components/GuiaAyuda';
+import { generatePDFReport } from './engine/pdfReportGenerator';
 
 export default function App() {
     const state = useAppState();
@@ -45,6 +46,7 @@ export default function App() {
                 exportData={state.exportData}
                 importData={state.importData}
                 resetAllData={state.resetAllData}
+                generatePDF={() => generatePDFReport(state.results, state.config, state.params)}
             />
 
             <main className="main-content">
