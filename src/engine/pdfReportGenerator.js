@@ -4,7 +4,7 @@
  */
 
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { MONTHS, MONTHS_SHORT } from './defaultParams';
 import { formatCurrency, formatPercent } from './calculationEngine';
 
@@ -198,7 +198,7 @@ export function generatePDFReport(results, config, params) {
     doc.setTextColor(...COLORS.primary);
     doc.text('RESUMEN MENSUAL', 20, miniTableY);
 
-    doc.autoTable({
+    autoTable(doc, {
         startY: miniTableY + 4,
         margin: { left: 20, right: 20 },
         head: [['Concepto', ...MONTHS_SHORT]],
@@ -279,7 +279,7 @@ export function generatePDFReport(results, config, params) {
         { label: 'SUELDO NETO FINAL', values: results.map(r => r.sueldoNetoFinal), style: 'success' },
     ];
 
-    doc.autoTable({
+    autoTable(doc, {
         startY: 28,
         margin: { left: 10, right: 10 },
         head: [['Paso / Concepto', ...MONTHS_SHORT]],
