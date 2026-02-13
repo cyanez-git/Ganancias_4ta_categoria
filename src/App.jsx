@@ -5,6 +5,7 @@ import Dashboard from './components/Dashboard';
 import LiquidacionMensual from './components/LiquidacionMensual';
 import ConfigPersonal from './components/ConfigPersonal';
 import ConfigParametros from './components/ConfigParametros';
+import GuiaAyuda from './components/GuiaAyuda';
 
 export default function App() {
     const state = useAppState();
@@ -20,6 +21,8 @@ export default function App() {
                 return <ConfigPersonal {...state} />;
             case 'parametros':
                 return <ConfigParametros {...state} />;
+            case 'guia':
+                return <GuiaAyuda />;
             default:
                 return <Dashboard {...state} />;
         }

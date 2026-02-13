@@ -5,6 +5,7 @@ const NAV_ITEMS = [
     { id: 'liquidacion', icon: '💰', label: 'Liquidación Mensual' },
     { id: 'config', icon: '👤', label: 'Configuración Personal' },
     { id: 'parametros', icon: '⚙️', label: 'Parámetros Anuales' },
+    { id: 'guia', icon: '📖', label: 'Guía de Ayuda' },
 ];
 
 export default function Sidebar({ activeView, setActiveView, isOpen, onClose, exportData, importData, resetAllData }) {
