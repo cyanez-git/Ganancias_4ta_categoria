@@ -145,7 +145,7 @@ export default function GuiaAyuda() {
                             <div className="guia-calc-icon">📌</div>
                             <div>
                                 <strong>Deducción Especial</strong>
-                                <p>Incremento 22% (Ley 27.743)</p>
+                                <p>Adicional Doceava Parte (Ley 27.743)</p>
                             </div>
                         </div>
                         <div className="guia-calc-item">

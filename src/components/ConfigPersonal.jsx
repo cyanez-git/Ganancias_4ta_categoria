@@ -66,12 +66,10 @@ export default function ConfigPersonal({ config, updateConfig }) {
                     >
                         <option value="General">General</option>
                         <option value="Profesionales">Profesionales Nuevos</option>
-                        <option value="Zona Desfavorable">Zona Desfavorable</option>
                     </select>
                     <p style={{ fontSize: 'var(--font-xs)', color: 'var(--text-muted)', marginTop: '4px' }}>
                         {config.tipoDeduccionEspecial === 'General' && '✅ Empleados bajo relación de dependencia, cargos públicos'}
                         {config.tipoDeduccionEspecial === 'Profesionales' && '✅ Profesionales nuevos: deducción especial incrementada'}
-                        {config.tipoDeduccionEspecial === 'Zona Desfavorable' && '⚠️ Zona Desfavorable: NO vigente para 2° semestre 2025'}
                     </p>
                 </div>
             </div>

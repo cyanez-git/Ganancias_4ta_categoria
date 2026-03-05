@@ -18,7 +18,6 @@ function getDeduccionEspecial(params, semestre, tipo) {
     const ded = params.deduccionesPersonales[semestre];
     switch (tipo) {
         case 'Profesionales': return ded.deduccionEspecialProfesionales;
-        case 'Zona Desfavorable': return ded.deduccionEspecialZonaDesfavorable;
         default: return ded.deduccionEspecialGeneral;
     }
 }
@@ -159,9 +158,11 @@ export function calculateAllMonths(monthsData, config, params) {
         const dedHijos = config.cantidadHijos * dedPersonales.hijo;
         const dedHijosIncap = config.hijosIncapacitados * dedPersonales.hijoIncapacitado;
         const dedEspecial = getDeduccionEspecial(params, sem, config.tipoDeduccionEspecial);
-        const dedEspecialIncremento = dedEspecial * params.incrementoDeduccionEspecial;
 
-        const totalDeduccionesPersonales = mni + dedConyuge + dedHijos + dedHijosIncap + dedEspecial + dedEspecialIncremento;
+        const subtotalPersonalesMensual = mni + dedConyuge + dedHijos + dedHijosIncap + dedEspecial;
+        const dedEspecialDoceavaParte = subtotalPersonalesMensual / 12;
+
+        const totalDeduccionesPersonales = subtotalPersonalesMensual + dedEspecialDoceavaParte;
 
         // ── Deducciones totales acumuladas (personales × mes) ────
         // Personal deductions accumulate per month (multiply by month count)
@@ -175,8 +176,10 @@ export function calculateAllMonths(monthsData, config, params) {
             const pHijos = config.cantidadHijos * pDed.hijo;
             const pHijosIncap = config.hijosIncapacitados * pDed.hijoIncapacitado;
             const pEspecial = getDeduccionEspecial(params, pSem, config.tipoDeduccionEspecial);
-            const pIncremento = pEspecial * params.incrementoDeduccionEspecial;
-            deduccionesPersonalesAcum += pMni + pConyuge + pHijos + pHijosIncap + pEspecial + pIncremento;
+
+            const pSubtotal = pMni + pConyuge + pHijos + pHijosIncap + pEspecial;
+            const pDoceavaParte = pSubtotal / 12;
+            deduccionesPersonalesAcum += pSubtotal + pDoceavaParte;
         }
 
         // ── PASO 7-8: Ganancia Neta Acumulada ────────────────────
@@ -264,7 +267,7 @@ export function calculateAllMonths(monthsData, config, params) {
             dedHijos,
             dedHijosIncap,
             dedEspecial,
-            dedEspecialIncremento,
+            dedEspecialDoceavaParte,
             totalDeduccionesPersonales,
             deduccionesPersonalesAcum,
             deduccionesTotalesAcum,

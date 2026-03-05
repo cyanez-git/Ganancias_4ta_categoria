@@ -48,7 +48,7 @@ const ROWS = [
     { label: 'Hijos', key: 'dedHijos' },
     { label: 'Hijos Incapacitados', key: 'dedHijosIncap' },
     { label: 'Deducción Especial', key: 'dedEspecial' },
-    { label: 'Incremento 22% (Ley 27.743)', key: 'dedEspecialIncremento' },
+    { label: 'Adicional Doceava Parte (Ley 27.743)', key: 'dedEspecialDoceavaParte' },
     { label: 'Total Deducciones Personales', key: 'totalDeduccionesPersonales' },
 
     { label: '7. RESULTADO', section: true },

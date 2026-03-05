@@ -165,8 +165,7 @@ function AnnualView({ results }) {
         { label: 'Ganancia No Imponible', key: 'mni' },
         { label: 'Cónyuge', key: 'dedConyuge' },
         { label: 'Hijos', key: 'dedHijos' },
-        { label: 'Deducción Especial', key: 'dedEspecial' },
-        { label: 'Incremento 22%', key: 'dedEspecialIncremento' },
+        { label: 'Doceava Parte', key: 'dedEspecialDoceavaParte' },
         { label: 'Total Ded. Personales', key: 'totalDeduccionesPersonales', bold: true },
         { label: '7. RESULTADO', section: true },
         { label: 'Ganancia Neta Imponible', key: 'gananciaNeta' },
@@ -370,10 +369,10 @@ export default function LiquidacionMensual({ monthsData, updateMonthField, resul
                         <CalcField label="Hijos Incapacitados" value={result.dedHijosIncap} />
                         <CalcField label="Deducción Especial" value={result.dedEspecial} />
                         <CalcField
-                            label="Incremento 22% (Ley 27.743)"
-                            value={result.dedEspecialIncremento}
+                            label="Adicional Doceava Parte (Ley 27.743)"
+                            value={result.dedEspecialDoceavaParte}
                             className="highlight"
-                            hint="22% de la Deducción Especial. Reemplazó el adicional por zona patagónica desde abril 2024."
+                            hint="Equivale a 1/12 de la suma de MNI, Cargas de Familia y Deducción Especial."
                         />
                         <CalcField label="Total Deducciones Personales" value={result.totalDeduccionesPersonales} className="total-row" />
                     </Section>

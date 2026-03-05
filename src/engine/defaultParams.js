@@ -17,7 +17,6 @@ export const DEFAULT_PARAMS_2025 = {
             hijoIncapacitado: 318546.87,
             deduccionEspecialGeneral: 1142244.94,
             deduccionEspecialProfesionales: 1713367.40,
-            deduccionEspecialZonaDesfavorable: 1827832.90,
         },
         // Julio a Diciembre
         sem2: {
@@ -27,7 +26,6 @@ export const DEFAULT_PARAMS_2025 = {
             hijoIncapacitado: 318546.87,
             deduccionEspecialGeneral: 1142244.94,
             deduccionEspecialProfesionales: 1713367.40,
-            deduccionEspecialZonaDesfavorable: 0, // NO VIGENTE 2025
         },
     },
 
@@ -81,9 +79,6 @@ export const DEFAULT_PARAMS_2025 = {
         obraSocial: 0.03,
         inssjp: 0.03,
     },
-
-    // ── Incremento Deducción Especial (Ley 27.743) ────────────
-    incrementoDeduccionEspecial: 0.22,
 
     // ── Tope retención ────────────────────────────────────────
     topeRetencion: 0.35,

@@ -17,7 +17,7 @@ Los tres aportes (Jubilación 11%, Obra Social 3%, INSSJP 3%) ahora se muestran 
 **Archivo:** `LiquidacionMensual.jsx`
 
 La fila "Incremento 22%" ahora muestra el hint:  
-*"22% de la Deducción Especial. Reemplazó el adicional por zona patagónica desde abril 2024."*
+*"22% de la Deducción Especial.* ***(Nota: Actualizado posteriormente en Obs. 8 por "Adicional Doceava Parte")***"
 
 ---
 
@@ -60,5 +60,15 @@ El cálculo era correcto (40% con tope GNI, 10% sin tope). Se agregaron hints ex
 
 **Archivo:** `Sidebar.jsx`
 
-- Los botones ya existentes de export/import JSON ahora se llaman **"💾 Guardar borrador"** y **"📂 Cargar borrador"**.
 - Se agregó un indicador `● Auto-guardado activo en este navegador` para que el usuario sepa que el localStorage ya persiste el estado automáticamente.
+
+---
+
+## ✅ Obs. 8 — Reemplazo del "Incremento 22%" por "Adicional Doceava Parte"
+
+**Archivos:** `defaultParams.js` · `calculationEngine.js` · `ConfigPersonal.jsx` · `LiquidacionMensual.jsx` · `GuiaAyuda.jsx` · `excelExporter.js`
+
+- Se eliminó el porcentaje fijo del 22%.
+- En **calculationEngine.js**, la deducción especial extra se reemplazó por la deducción de la **Doceava parte** exigida por la Ley 27.743. Consiste en dividir entre 12 la suma mensual (y acumulada) de la GNI, las cargas de familia y la deducción especial.
+- Se actualizaron todos los textos en UI, Tooltips y Exportaciones de Excel y PDF para llamarse "Adicional Doceava Parte (Ley 27.743)".
+- Se eliminó la variable derogada de "Zona Desfavorable" del selector de configuración.

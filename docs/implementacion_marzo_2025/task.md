@@ -1,31 +1,24 @@
 # Tareas — Implementación Observaciones Ganancias 4ta Cat.
 
-## Observación 1 — Aportes modificables (jubilación, obra social, INSSJP)
-- [x] `defaultParams.js`: agregar campos `jubilacionManual`, `obraSocialManual`, `inssjpManual` (null por defecto)
-- [x] `calculationEngine.js`: usar campos manuales cuando estén definidos (Paso 3)
-- [x] `LiquidacionMensual.jsx`: convertir las filas de aportes en inputs editables con reset al auto
+*(Las observaciones 1 a 7 de la fase anterior han sido completadas).*
 
-## Observación 2 — Hint: Incremento 22% (Ley 27.743)
-- [x] `LiquidacionMensual.jsx`: agregar hint explicativo en la fila del Incremento 22%
+## Observación 8 — Nueva Deducción Especial "Doceava Parte" (Ley 27.743)
 
-## Observación 3 — Hint: Deducciones sobre SAC (17%)
-- [x] `LiquidacionMensual.jsx`: agregar hint explicativo en la fila de Deducciones sobre SAC
+- [x] **`defaultParams.js`**:
+  - Eliminar parámetro obsoleto `incrementoDeduccionEspecial: 0.22`.
+  - Quitar lógica obsoleta sobre "zona desfavorable" 22%.
 
-## Observación 4 — Retención efectiva manual (real sufrida)
-- [x] `defaultParams.js`: agregar campo `retencionEfectivaManual` (null por defecto)
-- [x] `calculationEngine.js`: usar valor manual si está definido
-- [x] `LiquidacionMensual.jsx`: agregar input opcional "Retención real sufrida"
+- [x] **`calculationEngine.js`**:
+  - En Paso 6, dejar de calcular el "incremento 22%".
+  - Calcular la suma base de deducciones personales: `(MNI + Familia + Especial)`.
+  - Calcular la "doceava parte": `suma / 12`.
+  - Sumar la doceava parte al total de deducciones personales mensuales y acumulados.
+  - Renombrar variable generada en `results` de `dedEspecialIncremento` a `dedEspecialDoceavaParte`.
 
-## Observación 5 — Aclarar topes de alquiler (no es un bug real)
-- [x] `LiquidacionMensual.jsx`: agregar hints en filas de Alquiler 40% y Alquiler 10%
+- [x] **Visibles UI (`LiquidacionMensual.jsx`, `Dashboard.jsx`)**:
+  - Renombrar los labels de "Incremento 22%" a "Adicional Doceava Parte (Ley 27.743)".
+  - Actualizar el texto explicativo (hint) para reflejar su naturaleza proporcional a los 3 rubros de deducciones personales.
 
-## Observación 6 — Exportar vista anual a Excel
-- [x] Instalar librería `xlsx` (SheetJS)
-- [x] Crear `src/engine/excelExporter.js` con función `exportToExcel`
-- [x] `Dashboard.jsx`: agregar botón "Exportar Excel"
-- [x] `LiquidacionMensual.jsx`: agregar botón "Exportar Excel" en vista anual
-
-## Observación 7 — Borradores (guardar/cargar JSON en UI)
-- [x] `Sidebar.jsx`: agregar botones "Guardar borrador" y "Cargar borrador"
-- [x] `Sidebar.jsx`: agregar indicador de auto-guardado activo
-- [x] `App.jsx`: pasar `exportData` e `importData` al Sidebar
+- [x] **Exportaciones (`excelExporter.js`, `pdfReportGenerator.js`)**:
+  - Renombrar el encabezado/fila de la exportación de "Incremento 22%" a "Adicional Doceava Parte".
+  - Asegurar que impacte correctamente en la suma total del excel/pdf.
