@@ -342,12 +342,12 @@ export default function LiquidacionMensual({ monthsData, updateMonthField, resul
                             <CalcField
                                 label="Alquiler deducible 40%"
                                 value={result.alquiler40}
-                                hint="40% del alquiler pagado, con tope en la GNI del período. El excedente no se transfiere."
+                                hint="del alquiler pagado, con tope en la GNI del período. El excedente no se transfiere."
                             />
                             <CalcField
                                 label="Alquiler deducible 10% (Ley 27.737)"
                                 value={result.alquiler10}
-                                hint="10% adicional sin tope — incorporado por Ley 27.737 (2024)."
+                                hint="adicional sin tope — incorporado por Ley 27.737 (2024)."
                             />
                             <CalcField label="Medicina Prepaga deducible (5% GNSI)" value={result.medicinaPreDeducible} />
                             <CalcField label="Educación deducible" value={result.educacionDeducible} />
@@ -356,7 +356,7 @@ export default function LiquidacionMensual({ monthsData, updateMonthField, resul
                             <CalcField
                                 label="Deducciones sobre SAC (17%)"
                                 value={result.deduccionesSobreSAC}
-                                hint="17% del SAC proporcional acumulado. Equivale a los aportes previsionales sobre el aguinaldo."
+                                hint="del SAC proporcional acumulado. Equivale a los aportes previsionales sobre el aguinaldo."
                             />
                         </div>
                         <CalcField label="Total Deducciones Generales" value={result.totalDeduccionesGenerales} className="total-row" />

@@ -677,6 +677,14 @@ body::before {
   font-weight: 500;
 }
 
+.calc-row .calc-label .hint {
+  display: block;
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-top: 1px;
+}
+
 .calc-row .calc-value {
   text-align: right;
   font-size: var(--font-base);
