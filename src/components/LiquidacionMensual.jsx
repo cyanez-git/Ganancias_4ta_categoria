@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { MONTHS_SHORT } from '../engine/defaultParams';
 import { formatCurrency } from '../engine/calculationEngine';
+import { exportToExcel } from '../engine/excelExporter';
 
 const INCOME_FIELDS = [
     { key: 'sueldoBasico', label: 'Sueldo Básico', hint: 'Remuneración bruta mensual' },
@@ -70,10 +71,47 @@ function InputField({ field, value, onChange }) {
     );
 }
 
-function CalcField({ label, value, className = '' }) {
+/**
+ * Campo de aporte previsional: muestra el valor autocalculado como placeholder
+ * y permite sobreescribirlo. Botón de reset vuelve al auto.
+ */
+function ManualOverrideField({ label, autoValue, manualKey, manualValue, onReset, onChange, hint }) {
+    const isOverridden = manualValue != null && manualValue !== '';
+    return (
+        <div className="input-row">
+            <div className="input-label">
+                <span>{label}</span>
+                {hint && <span className="hint">{hint}</span>}
+                {isOverridden && (
+                    <span
+                        title="Volver al valor autocalculado"
+                        onClick={() => onReset(manualKey)}
+                        style={{ cursor: 'pointer', marginLeft: 6, fontSize: '0.75rem', color: 'var(--accent)', userSelect: 'none' }}
+                    >↩ auto</span>
+                )}
+            </div>
+            <input
+                type="number"
+                className={`form-input ${isOverridden ? 'input-yellow' : ''}`}
+                value={isOverridden ? manualValue : ''}
+                placeholder={autoValue != null ? autoValue.toFixed(2) : '0,00'}
+                onChange={(e) => onChange(manualKey, e.target.value === '' ? null : e.target.value)}
+                step="0.01"
+                min="0"
+                title={isOverridden ? 'Valor manual ingresado' : 'Autocalculado — editá para sobreescribir'}
+                style={{ color: isOverridden ? undefined : 'var(--text-muted)' }}
+            />
+        </div>
+    );
+}
+
+function CalcField({ label, value, className = '', hint }) {
     return (
         <div className={`calc-row ${className}`}>
-            <div className="calc-label">{label}</div>
+            <div className="calc-label">
+                {label}
+                {hint && <span className="hint">{hint}</span>}
+            </div>
             <div className={`calc-value ${value < 0 ? 'negative' : ''}`}>
                 {formatCurrency(value)}
             </div>
@@ -180,7 +218,7 @@ function AnnualView({ results }) {
     );
 }
 
-export default function LiquidacionMensual({ monthsData, updateMonthField, results, activeMonth, setActiveMonth }) {
+export default function LiquidacionMensual({ monthsData, updateMonthField, results, activeMonth, setActiveMonth, config, params }) {
     const [viewMode, setViewMode] = useState('month'); // month | annual
     const m = activeMonth;
     const data = monthsData[m];
@@ -219,7 +257,17 @@ export default function LiquidacionMensual({ monthsData, updateMonthField, resul
             </div>
 
             {viewMode === 'annual' ? (
-                <AnnualView results={results} />
+                <div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
+                        <button
+                            className="btn btn-primary"
+                            onClick={() => exportToExcel(results, config, params)}
+                        >
+                            📊 Exportar Excel
+                        </button>
+                    </div>
+                    <AnnualView results={results} />
+                </div>
             ) : (
                 <div className="animate-in" key={m}>
                     {/* 1. Ingresos */}
@@ -241,9 +289,31 @@ export default function LiquidacionMensual({ monthsData, updateMonthField, resul
                     {/* 3. Descuentos Obligatorios */}
                     <Section title="Descuentos Obligatorios" icon="📉" total={result.totalDescuentos} defaultOpen={true}>
                         <CalcField label="Base para Descuentos (tope MoPRe)" value={result.baseDescuentos} />
-                        <CalcField label="Jubilación 11%" value={result.jubilacion} />
-                        <CalcField label="Obra Social 3%" value={result.obraSocial} />
-                        <CalcField label="INSSJP - Ley 19.032 3%" value={result.inssjp} />
+                        <ManualOverrideField
+                            label="Jubilación 11%"
+                            autoValue={result.jubilacionAuto}
+                            manualKey="jubilacionManual"
+                            manualValue={data.jubilacionManual}
+                            onReset={(key) => handleChange(key, null)}
+                            onChange={handleChange}
+                            hint="Autocalculado — editá para usar el valor del recibo"
+                        />
+                        <ManualOverrideField
+                            label="Obra Social 3%"
+                            autoValue={result.obraSocialAuto}
+                            manualKey="obraSocialManual"
+                            manualValue={data.obraSocialManual}
+                            onReset={(key) => handleChange(key, null)}
+                            onChange={handleChange}
+                        />
+                        <ManualOverrideField
+                            label="INSSJP - Ley 19.032 3%"
+                            autoValue={result.inssjpAuto}
+                            manualKey="inssjpManual"
+                            manualValue={data.inssjpManual}
+                            onReset={(key) => handleChange(key, null)}
+                            onChange={handleChange}
+                        />
                         {DESCUENTOS_FIELDS.map(f => (
                             <InputField key={f.key} field={f} value={data[f.key]} onChange={handleChange} />
                         ))}
@@ -269,13 +339,25 @@ export default function LiquidacionMensual({ monthsData, updateMonthField, resul
                             <InputField key={f.key} field={f} value={data[f.key]} onChange={handleChange} />
                         ))}
                         <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '8px', marginTop: '8px' }}>
-                            <CalcField label="Alquiler deducible 40%" value={result.alquiler40} />
-                            <CalcField label="Alquiler deducible 10% (Ley 27.737)" value={result.alquiler10} />
+                            <CalcField
+                                label="Alquiler deducible 40%"
+                                value={result.alquiler40}
+                                hint="40% del alquiler pagado, con tope en la GNI del período. El excedente no se transfiere."
+                            />
+                            <CalcField
+                                label="Alquiler deducible 10% (Ley 27.737)"
+                                value={result.alquiler10}
+                                hint="10% adicional sin tope — incorporado por Ley 27.737 (2024)."
+                            />
                             <CalcField label="Medicina Prepaga deducible (5% GNSI)" value={result.medicinaPreDeducible} />
                             <CalcField label="Educación deducible" value={result.educacionDeducible} />
                             <CalcField label="Seguro de Vida deducible (5% GNSI)" value={result.seguroVidaDeducible} />
                             <CalcField label="Donaciones deducibles (5% GNSI)" value={result.donacionesDeducible} />
-                            <CalcField label="Deducciones sobre SAC (17%)" value={result.deduccionesSobreSAC} />
+                            <CalcField
+                                label="Deducciones sobre SAC (17%)"
+                                value={result.deduccionesSobreSAC}
+                                hint="17% del SAC proporcional acumulado. Equivale a los aportes previsionales sobre el aguinaldo."
+                            />
                         </div>
                         <CalcField label="Total Deducciones Generales" value={result.totalDeduccionesGenerales} className="total-row" />
                     </Section>
@@ -287,7 +369,12 @@ export default function LiquidacionMensual({ monthsData, updateMonthField, resul
                         <CalcField label="Hijos" value={result.dedHijos} />
                         <CalcField label="Hijos Incapacitados" value={result.dedHijosIncap} />
                         <CalcField label="Deducción Especial" value={result.dedEspecial} />
-                        <CalcField label="Incremento 22% (Ley 27.743)" value={result.dedEspecialIncremento} className="highlight" />
+                        <CalcField
+                            label="Incremento 22% (Ley 27.743)"
+                            value={result.dedEspecialIncremento}
+                            className="highlight"
+                            hint="22% de la Deducción Especial. Reemplazó el adicional por zona patagónica desde abril 2024."
+                        />
                         <CalcField label="Total Deducciones Personales" value={result.totalDeduccionesPersonales} className="total-row" />
                     </Section>
 
@@ -302,10 +389,23 @@ export default function LiquidacionMensual({ monthsData, updateMonthField, resul
                         ))}
                         <CalcField label="Retención del Mes (antes de tope)" value={result.retencionDelMes} />
                         <CalcField label="Tope 35% del Sueldo Neto" value={result.tope35} />
-                        <CalcField label="RETENCIÓN EFECTIVA" value={result.retencionEfectiva} className="total-row" />
+                        <CalcField
+                            label={`RETENCIÓN EFECTIVA${data.retencionEfectivaManual != null && data.retencionEfectivaManual !== '' ? ' (manual)' : ' (calculada)'}`}
+                            value={result.retencionEfectiva}
+                            className="total-row"
+                        />
                         {result.diferenciaNoRetenida > 0 && (
                             <CalcField label="⚠️ Diferencia no retenida (se posterga)" value={result.diferenciaNoRetenida} />
                         )}
+                        <ManualOverrideField
+                            label="Retención real sufrida (opcional)"
+                            autoValue={null}
+                            manualKey="retencionEfectivaManual"
+                            manualValue={data.retencionEfectivaManual}
+                            onReset={(key) => handleChange(key, null)}
+                            onChange={handleChange}
+                            hint="Si la retención real del recibo difiere de la calculada, ingresala aquí."
+                        />
                     </Section>
 
                     {/* 8. Sueldo Neto */}

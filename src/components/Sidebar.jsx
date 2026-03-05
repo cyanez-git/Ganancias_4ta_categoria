@@ -51,14 +51,28 @@ export default function Sidebar({ activeView, setActiveView, isOpen, onClose, ex
 
             <div className="sidebar-footer">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {/* Indicador auto-guardado */}
+                    <div style={{
+                        fontSize: '0.7rem',
+                        color: 'var(--text-muted)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                        paddingBottom: '4px',
+                        borderBottom: '1px solid var(--border-subtle)',
+                        marginBottom: '2px',
+                    }}>
+                        <span style={{ color: '#10b981', fontSize: '0.65rem' }}>●</span>
+                        Auto-guardado activo en este navegador
+                    </div>
                     <button className="btn btn-primary btn-sm" onClick={generatePDF}>
                         📄 Informe PDF
                     </button>
-                    <button className="btn btn-ghost btn-sm" onClick={exportData}>
-                        📥 Exportar JSON
+                    <button className="btn btn-ghost btn-sm" onClick={exportData} title="Descarga un archivo JSON con todos tus datos para compartir o hacer backup">
+                        💾 Guardar borrador
                     </button>
-                    <button className="btn btn-ghost btn-sm" onClick={() => fileInputRef.current?.click()}>
-                        📤 Importar JSON
+                    <button className="btn btn-ghost btn-sm" onClick={() => fileInputRef.current?.click()} title="Cargá un borrador previamente guardado">
+                        📂 Cargar borrador
                     </button>
                     <input
                         ref={fileInputRef}

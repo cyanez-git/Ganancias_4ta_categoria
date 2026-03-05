@@ -89,9 +89,14 @@ export function calculateAllMonths(monthsData, config, params) {
             topeMoPre
         );
 
-        const jubilacion = baseDescuentos * params.porcentajes.jubilacion;
-        const obraSocial = baseDescuentos * params.porcentajes.obraSocial;
-        const inssjp = baseDescuentos * params.porcentajes.inssjp;
+        const jubilacionAuto = baseDescuentos * params.porcentajes.jubilacion;
+        const obraSocialAuto = baseDescuentos * params.porcentajes.obraSocial;
+        const inssjpAuto = baseDescuentos * params.porcentajes.inssjp;
+
+        // Si el usuario ingresó un valor manual, se usa ese; sino el autocalculado
+        const jubilacion = (data.jubilacionManual != null && data.jubilacionManual !== '') ? Number(data.jubilacionManual) : jubilacionAuto;
+        const obraSocial = (data.obraSocialManual != null && data.obraSocialManual !== '') ? Number(data.obraSocialManual) : obraSocialAuto;
+        const inssjp = (data.inssjpManual != null && data.inssjpManual !== '') ? Number(data.inssjpManual) : inssjpAuto;
 
         const totalDescuentos = jubilacion + obraSocial + inssjp +
             data.aportesSindicales + data.otrosDescuentosObligatorios;
@@ -203,8 +208,12 @@ export function calculateAllMonths(monthsData, config, params) {
         // Tope 35%
         const sueldoNeto = totalIngresos + totalPluriempleo - totalDescuentos;
         const tope35 = sueldoNeto * params.topeRetencion;
-        const retencionEfectiva = Math.min(retencionDelMes, tope35);
-        const diferenciaNoRetenida = retencionDelMes - retencionEfectiva;
+        const retencionEfectivaCalculada = Math.min(retencionDelMes, tope35);
+        // Si el usuario ingresó la retención real sufrida, se usa esa
+        const retencionEfectiva = (data.retencionEfectivaManual != null && data.retencionEfectivaManual !== '')
+            ? Number(data.retencionEfectivaManual)
+            : retencionEfectivaCalculada;
+        const diferenciaNoRetenida = retencionDelMes - retencionEfectivaCalculada;
 
         // Sueldo neto final
         const sueldoNetoFinal = totalIngresos + totalPluriempleo - totalDescuentos - retencionEfectiva;
@@ -220,6 +229,9 @@ export function calculateAllMonths(monthsData, config, params) {
 
             // Descuentos
             baseDescuentos,
+            jubilacionAuto,
+            obraSocialAuto,
+            inssjpAuto,
             jubilacion,
             obraSocial,
             inssjp,

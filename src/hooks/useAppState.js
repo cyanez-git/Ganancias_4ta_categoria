@@ -72,7 +72,8 @@ export function useAppState() {
     const updateMonthField = useCallback((monthIndex, field, value) => {
         setMonthsData(prev => {
             const next = [...prev];
-            next[monthIndex] = { ...next[monthIndex], [field]: Number(value) || 0 };
+            // null significa "volver al autocalculado" para campos con override manual
+            next[monthIndex] = { ...next[monthIndex], [field]: value === null ? null : (Number(value) || 0) };
             return next;
         });
     }, []);

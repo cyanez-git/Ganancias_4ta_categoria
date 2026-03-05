@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { MONTHS_SHORT } from '../engine/defaultParams';
 import { formatCurrency, formatPercent } from '../engine/calculationEngine';
 import { generatePDFReport } from '../engine/pdfReportGenerator';
+import { exportToExcel } from '../engine/excelExporter';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -178,13 +179,22 @@ export default function Dashboard({ results, config, params }) {
                     <h1>📊 Dashboard</h1>
                     <p className="subtitle">Resumen general del ejercicio fiscal 2025</p>
                 </div>
-                <button
-                    className="btn btn-primary"
-                    onClick={() => generatePDFReport(results, config, params)}
-                    style={{ whiteSpace: 'nowrap' }}
-                >
-                    📄 Generar Informe PDF
-                </button>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <button
+                        className="btn btn-primary"
+                        onClick={() => exportToExcel(results, config, params)}
+                        style={{ whiteSpace: 'nowrap' }}
+                    >
+                        📊 Exportar Excel
+                    </button>
+                    <button
+                        className="btn btn-primary"
+                        onClick={() => generatePDFReport(results, config, params)}
+                        style={{ whiteSpace: 'nowrap' }}
+                    >
+                        📄 Generar Informe PDF
+                    </button>
+                </div>
             </div>
 
             {/* KPIs */}

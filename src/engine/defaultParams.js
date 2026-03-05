@@ -121,6 +121,11 @@ export function createEmptyMonthData() {
         aportesSindicales: 0,
         otrosDescuentosObligatorios: 0,
 
+        // Aportes previsionales manuales (null = usar el autocalculado)
+        jubilacionManual: null,
+        obraSocialManual: null,
+        inssjpManual: null,
+
         // Deducciones generales (input)
         alquilerPagado: 0,
         medicinaPrepaga: 0,
@@ -143,6 +148,9 @@ export function createEmptyMonthData() {
         // Impuesto (input)
         pagosACuenta: 0,
         retencionesReintegradas: 0,
+
+        // Retención efectiva real sufrida (null = usar la calculada)
+        retencionEfectivaManual: null,
 
         // Ajuste SAC semestral (input, solo Jun y Dic)
         ajusteSACSemestral: 0,
