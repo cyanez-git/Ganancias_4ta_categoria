@@ -27,8 +27,12 @@ const ROWS = [
     { label: 'Total Descuentos', key: 'totalDescuentos' },
 
     { label: '4. GANANCIA BRUTA', section: true },
-    { label: 'Ganancia Bruta del Mes', key: 'gananciaBrutaMes' },
-    { label: 'SAC Proporcional', key: 'sacProporcional' },
+    { label: 'Ganancia Bruta Pura (Sin SAC)', key: 'gananciaBrutaPuraMes' },
+    { label: 'SAC Real Pagado', key: 'sacRealMes' },
+    { label: 'Ganancia Bruta con SAC (Base Mes)', key: 'gananciaBrutaMes' },
+    { label: 'Ganancia Bruta Pura Acumulada', key: 'gananciaBrutaPuraAcum' },
+    { label: 'SAC Real Acum.', key: 'sacRealAcum' },
+    { label: 'SAC Proporcional Prov. Acum', key: 'sacProporcionalAcum' },
     { label: 'Ganancia Bruta Acumulada', key: 'gananciaBrutaAcum' },
 
     { label: '5. DEDUCCIONES GENERALES', section: true },

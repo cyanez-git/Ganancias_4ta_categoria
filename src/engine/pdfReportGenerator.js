@@ -265,12 +265,13 @@ export function generatePDFReport(results, config, params) {
     doc.text('RESUMEN CÁLCULO — ARCA MAPEO V3', 20, 14);
 
     const v3Rows = [
-        { label: '1. Ganancia bruta del mes', values: results.map(r => r.gananciaBrutaMes), style: 'normal' },
+        { label: '1. Ganancia bruta Pura', values: results.map(r => r.gananciaBrutaPuraMes), style: 'normal' },
         { label: '2. Ret. no habituales', values: results.map(r => r.data.noRemunerativosNoHabituales), style: 'normal' },
-        { label: '3. SAC Proporcional', values: results.map(r => r.sacProporcional), style: 'normal' },
+        { label: '3. SAC Proporcional Acum.', values: results.map(r => r.sacProporcionalAcum), style: 'normal' },
+        { label: '... SAC Real Acum.', values: results.map(r => r.sacRealAcum), style: 'normal' },
         { label: '4. Descuentos obligatorios', values: results.map(r => r.totalDescuentos), style: 'normal' },
         { label: '5. Deducciones generales', values: results.map(r => r.totalDeduccionesGenerales), style: 'normal' },
-        { label: '8. Gan. neta acumulada', values: results.map(r => r.gananciaBrutaConSACAcum), style: 'accent' },
+        { label: '8. Gan. neta acumulada (Base)', values: results.map(r => r.gananciaBrutaConSACAcum), style: 'accent' },
         { label: '9. Ded. personales acum.', values: results.map(r => r.deduccionesPersonalesAcum), style: 'normal' },
         { label: '10. Gan. neta suj. impuesto', values: results.map(r => r.gananciaNeta), style: 'accent' },
         { label: '11. Impuesto determinado', values: results.map(r => r.impuestoDeterminado), style: 'warning' },
@@ -357,7 +358,7 @@ export function generatePDFReport(results, config, params) {
         { label: 'Comisiones', values: results.map(r => r.data.comisiones) },
         { label: 'Plus Vacacional', values: results.map(r => r.data.plusVacacional) },
         { label: 'Otros Remunerativos', values: results.map(r => r.data.otrosRemunerativos) },
-        { label: 'SAC / Aguinaldo', values: results.map(r => r.data.sacAguinaldo) },
+        { label: 'SAC / Aguinaldo Cobrado', values: results.map(r => r.sacRealMes) },
         { label: 'TOTAL INGRESOS', values: results.map(r => r.totalIngresos), style: 'total' },
         { label: '—', values: Array(12).fill(''), style: 'separator' },
         { label: 'Jubilación (11%)', values: results.map(r => r.jubilacion) },

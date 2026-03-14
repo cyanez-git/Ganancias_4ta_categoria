@@ -278,27 +278,31 @@ export default function Dashboard({ results, config, params }) {
                         </thead>
                         <tbody>
                             <tr>
-                                <td>1. Ganancia bruta (A)</td>
-                                {results.map((r, i) => <td key={i}>{formatCurrency(r.gananciaBrutaMes)}</td>)}
+                                <td>1. Ganancia bruta Pura</td>
+                                {results.map((r, i) => <td key={i}>{formatCurrency(r.gananciaBrutaPuraMes)}</td>)}
                             </tr>
                             <tr>
-                                <td>2. Ret. no habituales (B)</td>
+                                <td>2. Ret. no habituales</td>
                                 {results.map((r, i) => <td key={i}>{formatCurrency(r.data.noRemunerativosNoHabituales)}</td>)}
                             </tr>
                             <tr>
-                                <td>3. SAC (C)</td>
-                                {results.map((r, i) => <td key={i}>{formatCurrency(r.sacProporcional)}</td>)}
+                                <td>3. SAC Proporcional Acum</td>
+                                {results.map((r, i) => <td key={i}>{formatCurrency(r.sacProporcionalAcum)}</td>)}
                             </tr>
                             <tr>
-                                <td>4. Deducciones (D)</td>
+                                <td>- SAC Real Acum</td>
+                                {results.map((r, i) => <td key={i}>{formatCurrency(r.sacRealAcum)}</td>)}
+                            </tr>
+                            <tr>
+                                <td>4. Deducciones</td>
                                 {results.map((r, i) => <td key={i}>{formatCurrency(r.totalDeduccionesGenerales)}</td>)}
                             </tr>
                             <tr>
-                                <td>8. Gan. neta acum.</td>
+                                <td>8. Gan. neta acum. (Base)</td>
                                 {results.map((r, i) => <td key={i}>{formatCurrency(r.gananciaBrutaConSACAcum)}</td>)}
                             </tr>
                             <tr>
-                                <td>9. Ded. personales acum. (E)</td>
+                                <td>9. Ded. personales acum.</td>
                                 {results.map((r, i) => <td key={i}>{formatCurrency(r.deduccionesPersonalesAcum)}</td>)}
                             </tr>
                             <tr>

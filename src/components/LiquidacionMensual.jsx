@@ -12,7 +12,7 @@ const INCOME_FIELDS = [
     { key: 'otrosRemunerativos', label: 'Otros Conceptos Remunerativos' },
     { key: 'noRemunerativosHabituales', label: 'Conceptos No Rem. Habituales', hint: 'Viáticos, refrigerio, etc.' },
     { key: 'noRemunerativosNoHabituales', label: 'Conceptos No Rem. NO Habituales', hint: 'Gratificaciones, ajustes. Prorratear si ≥20%' },
-    { key: 'sacAguinaldo', label: 'SAC / Aguinaldo', hint: 'Importar el monto real del aguinaldo' },
+    { key: 'sacAguinaldo', label: 'SAC / Aguinaldo Cobrado', hint: 'Importar el monto EXCEPTO si no se pagó' },
 ];
 
 const PLURIEMPLEO_FIELDS = [
@@ -153,8 +153,12 @@ function AnnualView({ results }) {
         { label: 'INSSJP 3%', key: 'inssjp' },
         { label: 'Total Descuentos', key: 'totalDescuentos', bold: true },
         { label: '4. GANANCIA BRUTA', section: true },
-        { label: 'Ganancia Bruta Mes', key: 'gananciaBrutaMes' },
-        { label: 'SAC Proporcional', key: 'sacProporcional' },
+        { label: 'Ganancia Bruta Pura (Sin SAC)', key: 'gananciaBrutaPuraMes' },
+        { label: 'SAC Real Cargado', key: 'sacRealMes' },
+        { label: 'Ganancia Bruta del Mes', key: 'gananciaBrutaMes' },
+        { label: 'G. Bruta Pura Acum.', key: 'gananciaBrutaPuraAcum', bold: true },
+        { label: 'SAC Real Acumulado', key: 'sacRealAcum' },
+        { label: 'SAC Proporcional Prov.', key: 'sacProporcionalAcum' },
         { label: 'Ganancia Bruta Acum.', key: 'gananciaBrutaAcum', bold: true },
         { label: '5. DEDUCCIONES GENERALES', section: true },
         { label: 'Alquiler 40%', key: 'alquiler40' },
@@ -320,16 +324,29 @@ export default function LiquidacionMensual({ monthsData, updateMonthField, resul
                     </Section>
 
                     {/* 4. Ganancia Bruta */}
-                    <Section title="Ganancia Bruta" icon="📈" total={result.gananciaBrutaMes}>
-                        <CalcField label="Ganancia Bruta del Mes" value={result.gananciaBrutaMes} />
-                        <CalcField label="SAC Proporcional (Acum/12)" value={result.sacProporcional} />
-                        <InputField
-                            field={{ key: 'ajusteSACSemestral', label: 'Ajuste SAC Semestral', hint: m === 5 ? 'Ajuste junio' : m === 11 ? 'Ajuste diciembre' : 'Solo usar en Jun/Dic' }}
-                            value={data.ajusteSACSemestral}
-                            onChange={handleChange}
-                        />
-                        <CalcField label="Ganancia Bruta con SAC" value={result.gananciaBrutaConSAC} />
-                        <CalcField label="Ganancia Bruta Acumulada" value={result.gananciaBrutaAcum} className="total-row" />
+                    <Section title="Ganancia Bruta y SAC" icon="📈" total={result.gananciaBrutaMes}>
+                        <CalcField label="Ganancia Bruta Pura (Sin SAC)" value={result.gananciaBrutaPuraMes} />
+                        <CalcField label="SAC Real Cargado (este mes)" value={result.sacRealMes} />
+                        <CalcField label="Ganancia Bruta Recibo" value={result.gananciaBrutaMes} className="total-row" />
+                        
+                        <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '8px', marginTop: '8px' }}>
+                            <CalcField label="Ganancia Bruta Pura Acumulada" value={result.gananciaBrutaPuraAcum} />
+                            <CalcField label="SAC Proporcional Acumulado (Monto de Reserva Legal)" value={result.sacProporcionalAcum} />
+                            <CalcField label="SAC Real Pagado Acumulado" value={result.sacRealAcum} />
+                            <CalcField 
+                                label="Tope de SAC Aplicado para Carga Impositiva" 
+                                value={result.topeSACParaCalculos} 
+                                className="highlight" 
+                                hint="Es el mayor entre el SAC 1/12 acumulado provisorio y los cobros reales (se liquidan diferencias a favor de AFIP o de empleado en Jun/Dic)" 
+                            />
+                            <InputField
+                                field={{ key: 'ajusteSACSemestral', label: 'Ajuste Adicional SAC', hint: m === 5 ? 'Ajuste junio' : m === 11 ? 'Ajuste diciembre' : 'Solo en caso de correcciones manuales' }}
+                                value={data.ajusteSACSemestral}
+                                onChange={handleChange}
+                            />
+                        </div>
+
+                        <CalcField label="Ganancia Bruta Imponible Acum. (Base Cálculo)" value={result.gananciaBrutaConSACAcum} className="total-row" />
                     </Section>
 
                     {/* 5. Deducciones Generales */}

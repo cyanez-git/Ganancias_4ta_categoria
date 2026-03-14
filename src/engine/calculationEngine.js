@@ -55,7 +55,6 @@ export function calculateAllMonths(monthsData, config, params) {
         const escalas = params.escalas[sem];
         const topeMoPre = params.topesMoPre[m];
 
-        // ── PASO 1: Total Ingresos del Mes ──────────────────────
         const totalIngresos =
             data.sueldoBasico +
             data.adicionalesHabituales +
@@ -64,14 +63,17 @@ export function calculateAllMonths(monthsData, config, params) {
             data.plusVacacional +
             data.otrosRemunerativos +
             data.noRemunerativosHabituales +
-            data.noRemunerativosNoHabituales +
-            data.sacAguinaldo;
+            data.noRemunerativosNoHabituales;
+            // sacAguinaldo se cuenta por separado ahora para ingresos netos,
+            // pero lo sumamos al totalIngresos "de bolsillo" para reportes
+        const ingresoBolsillo = totalIngresos + data.sacAguinaldo;
 
         // ── PASO 2: Pluriempleo ──────────────────────────────────
-        const totalPluriempleo =
+        const totalPluriempleoPuro =
             data.retribucionesHabitualesPluriempleo +
-            data.retribucionesNoHabitualesPluriempleo +
-            data.sacPluriempleo;
+            data.retribucionesNoHabitualesPluriempleo;
+            
+        const pluriempleoBolsillo = totalPluriempleoPuro + data.sacPluriempleo;
 
         // ── PASO 3: Descuentos Obligatorios ──────────────────────
         // Base para descuentos con tope MoPRe
@@ -101,30 +103,45 @@ export function calculateAllMonths(monthsData, config, params) {
             data.aportesSindicales + data.otrosDescuentosObligatorios;
 
         // ── PASO 4: Ganancia Bruta ───────────────────────────────
-        const gananciaBrutaMes = totalIngresos + totalPluriempleo - data.otrosDescuentosObligatorios;
+        // Calculamos la ganancia bruta *pura* (sin contemplar el SAC cobrado en el mes)
+        const gananciaBrutaPuraMes = totalIngresos + totalPluriempleoPuro - data.otrosDescuentosObligatorios;
+        const sacRealMes = data.sacAguinaldo + data.sacPluriempleo;
+        const gananciaBrutaMesConSACRecibo = gananciaBrutaPuraMes + sacRealMes; 
 
-        // ── Ganancia Bruta Acumulada (sum of current and all previous months) ──
-        let gananciaBrutaAcum = gananciaBrutaMes;
+        // ── Ganancias Acumuladas (sum of current and all previous months) ──
+        let gananciaBrutaPuraAcum = gananciaBrutaPuraMes;
+        let sacRealAcum = sacRealMes;
         for (let p = 0; p < m; p++) {
-            gananciaBrutaAcum += results[p].gananciaBrutaMes;
+            gananciaBrutaPuraAcum += results[p].gananciaBrutaPuraMes;
+            sacRealAcum += results[p].sacRealMes;
         }
 
         // ── SAC Proporcional ─────────────────────────────────────
-        const sacProporcional = gananciaBrutaAcum / 12;
+        const sacProporcionalAcum = gananciaBrutaPuraAcum / 12;
+        // El de este mes específico
+        const sacProporcionalMensual = gananciaBrutaPuraMes / 12;
 
         // ── PASO 5: Deducciones Generales ────────────────────────
         const alquiler40 = Math.min(data.alquilerPagado * 0.4, dedPersonales.gananciaNoImponible);
         const alquiler10 = data.alquilerPagado * 0.1;
 
-        // Ganancia bruta con SAC (for 5% cap calculations)
-        const gananciaBrutaConSAC = gananciaBrutaMes + sacProporcional;
+        // Ganancia bruta con SAC para topes del 5%
+        // Tomamos el bruto puro + el mayor monto entre el diferencial proporcional vs el real que viene dado
+        const topeSACParaCalculos = Math.max(sacProporcionalAcum, sacRealAcum);
+        const gananciaBrutaParaTopesAcum = gananciaBrutaPuraAcum + topeSACParaCalculos;
+        
+        // El tope del 5% debe ser MENSUALIZADO de la GNSI. Simplificando se suele tomar 
+        // 5% de la ganancia bruta gravada como umbral.
+        // Haremos un prorrateo mes a mes para mantener la lógica existente:
+        const gananciaBrutaParaTopesMes = gananciaBrutaPuraMes + sacProporcionalMensual;
 
-        const medicinaPreDeducible = Math.min(data.medicinaPrepaga, gananciaBrutaConSAC * 0.05);
-        const educacionDeducible = Math.min(data.gastosEducacion, gananciaBrutaConSAC * 0.05);
-        const seguroVidaDeducible = Math.min(data.primasSeguroVida, gananciaBrutaConSAC * 0.05);
-        const donacionesDeducible = Math.min(data.donaciones, gananciaBrutaConSAC * 0.05);
+        const medicinaPreDeducible = Math.min(data.medicinaPrepaga, gananciaBrutaParaTopesMes * 0.05);
+        const educacionDeducible = Math.min(data.gastosEducacion, gananciaBrutaParaTopesMes * 0.05);
+        const seguroVidaDeducible = Math.min(data.primasSeguroVida, gananciaBrutaParaTopesMes * 0.05);
+        const donacionesDeducible = Math.min(data.donaciones, gananciaBrutaParaTopesMes * 0.05);
 
-        const deduccionesSobreSAC = sacProporcional * 0.17;
+        // Deducción especial para el SAC (17%). Aplica sobre la porción elegida de aguinaldo.
+        const deduccionesSobreSAC = sacProporcionalMensual * 0.17;
 
         const totalDeduccionesGenerales =
             alquiler40 + alquiler10 +
@@ -183,8 +200,8 @@ export function calculateAllMonths(monthsData, config, params) {
         }
 
         // ── PASO 7-8: Ganancia Neta Acumulada ────────────────────
-        // Ganancia bruta acumulada includes SAC proportional
-        const gananciaBrutaConSACAcum = gananciaBrutaAcum + sacProporcional + data.ajusteSACSemestral;
+        // Ganancia bruta acumulada incluye lo puro mas el máximo entre el proporcional presunto y el real ingresado.
+        const gananciaBrutaConSACAcum = gananciaBrutaPuraAcum + topeSACParaCalculos + data.ajusteSACSemestral;
 
         // ── PASO 9: Deducciones totales ──────────────────────────
         const deduccionesTotalesAcum = deduccionesGeneralesAcum + deduccionesPersonalesAcum;
@@ -209,7 +226,7 @@ export function calculateAllMonths(monthsData, config, params) {
         );
 
         // Tope 35%
-        const sueldoNeto = totalIngresos + totalPluriempleo - totalDescuentos;
+        const sueldoNeto = ingresoBolsillo + pluriempleoBolsillo - totalDescuentos;
         const tope35 = sueldoNeto * params.topeRetencion;
         const retencionEfectivaCalculada = Math.min(retencionDelMes, tope35);
         // Si el usuario ingresó la retención real sufrida, se usa esa
@@ -219,7 +236,7 @@ export function calculateAllMonths(monthsData, config, params) {
         const diferenciaNoRetenida = retencionDelMes - retencionEfectivaCalculada;
 
         // Sueldo neto final
-        const sueldoNetoFinal = totalIngresos + totalPluriempleo - totalDescuentos - retencionEfectiva;
+        const sueldoNetoFinal = ingresoBolsillo + pluriempleoBolsillo - totalDescuentos - retencionEfectiva;
 
         // ── Store result ─────────────────────────────────────────
         results.push({
@@ -227,8 +244,11 @@ export function calculateAllMonths(monthsData, config, params) {
             data, // reference to input data
 
             // Ingresos
-            totalIngresos,
-            totalPluriempleo,
+            totalIngresos: ingresoBolsillo, // back-compat
+            ingresoBolsillo,
+            totalIngresosPuros: totalIngresos,
+            totalPluriempleo: pluriempleoBolsillo, // back-compat
+            pluriempleoBolsillo,
 
             // Descuentos
             baseDescuentos,
@@ -241,14 +261,22 @@ export function calculateAllMonths(monthsData, config, params) {
             totalDescuentos,
 
             // Ganancia bruta
-            gananciaBrutaMes,
-            gananciaBrutaAcum,
-            sacProporcional,
-            gananciaBrutaConSAC,
+            gananciaBrutaMes: gananciaBrutaMesConSACRecibo, // back-compat 
+            gananciaBrutaPuraMes,
+            gananciaBrutaPuraAcum,
+
+            sacRealMes,
+            sacRealAcum,
+            sacProporcionalMensual,
+            sacProporcional: sacProporcionalAcum, // back-compat name
+            sacProporcionalAcum,
+            topeSACParaCalculos,
+
+            gananciaBrutaConSAC: gananciaBrutaParaTopesMes,
             gananciaBrutaConSACAcum,
 
             // Promedio remuneración bruta (para DEA)
-            promedioRemuneracion: gananciaBrutaAcum / (m + 1),
+            promedioRemuneracion: gananciaBrutaPuraAcum / (m + 1),
 
             // Deducciones generales
             alquiler40,
