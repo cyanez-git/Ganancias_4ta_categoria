@@ -30,10 +30,10 @@ const ROWS = [
     { label: 'Ganancia Bruta Pura (Sin SAC)', key: 'gananciaBrutaPuraMes' },
     { label: 'SAC Real Pagado', key: 'sacRealMes' },
     { label: 'Ganancia Bruta con SAC (Base Mes)', key: 'gananciaBrutaMes' },
-    { label: 'Ganancia Bruta Pura Acumulada', key: 'gananciaBrutaPuraAcum' },
-    { label: 'SAC Real Acum.', key: 'sacRealAcum' },
-    { label: 'SAC Proporcional Prov. Acum', key: 'sacProporcionalAcum' },
-    { label: 'Ganancia Bruta Acumulada', key: 'gananciaBrutaAcum' },
+    { label: 'Ganancia Bruta Pura Acumulada', key: 'gananciaBrutaPuraAcum', isCumulative: true },
+    { label: 'SAC Real Acum.', key: 'sacRealAcum', isCumulative: true },
+    { label: 'SAC Proporcional Prov. Acum', key: 'sacProporcionalAcum', isCumulative: true },
+    { label: 'Ganancia Bruta Acumulada', key: 'gananciaBrutaAcum', isCumulative: true },
 
     { label: '5. DEDUCCIONES GENERALES', section: true },
     { label: 'Alquiler Pagado', key: 'data.alquilerPagado' },
@@ -56,10 +56,10 @@ const ROWS = [
     { label: 'Total Deducciones Personales', key: 'totalDeduccionesPersonales' },
 
     { label: '7. RESULTADO', section: true },
-    { label: 'Deducciones Totales Acumuladas', key: 'deduccionesTotalesAcum' },
+    { label: 'Deducciones Totales Acumuladas', key: 'deduccionesTotalesAcum', isCumulative: true },
     { label: 'Ganancia Neta Imponible', key: 'gananciaNeta' },
     { label: 'Impuesto Determinado (Art. 94)', key: 'impuestoDeterminado' },
-    { label: 'Retenciones Meses Anteriores', key: 'retencionesAnteriores' },
+    { label: 'Retenciones Meses Anteriores', key: 'retencionesAnteriores', isCumulative: true },
     { label: 'Retención del Mes (antes de tope)', key: 'retencionDelMes' },
     { label: 'Tope 35% del Sueldo Neto', key: 'tope35' },
     { label: 'RETENCIÓN EFECTIVA', key: 'retencionEfectiva' },
@@ -92,7 +92,14 @@ export function exportToExcel(results, config, params) {
             sheetData.push([row.label, ...Array(13).fill('')]);
         } else {
             const values = results.map(r => getValue(r, row.key));
-            const total = values.reduce((a, b) => a + b, 0);
+            
+            // Si la fila representa un valor acumulado a lo largo del año,
+            // el total anual no es la suma de los 12 meses acumulándose sobre sí mismos, 
+            // sino directamente el valor del último mes (ej. diciembre).
+            const total = row.isCumulative 
+                ? values[values.length - 1] 
+                : values.reduce((a, b) => a + b, 0);
+                
             sheetData.push([row.label, ...values, total]);
         }
     }

@@ -156,10 +156,10 @@ function AnnualView({ results }) {
         { label: 'Ganancia Bruta Pura (Sin SAC)', key: 'gananciaBrutaPuraMes' },
         { label: 'SAC Real Cargado', key: 'sacRealMes' },
         { label: 'Ganancia Bruta del Mes', key: 'gananciaBrutaMes' },
-        { label: 'G. Bruta Pura Acum.', key: 'gananciaBrutaPuraAcum', bold: true },
-        { label: 'SAC Real Acumulado', key: 'sacRealAcum' },
-        { label: 'SAC Proporcional Prov.', key: 'sacProporcionalAcum' },
-        { label: 'Ganancia Bruta Acum.', key: 'gananciaBrutaAcum', bold: true },
+        { label: 'G. Bruta Pura Acum.', key: 'gananciaBrutaPuraAcum', bold: true, isCumulative: true },
+        { label: 'SAC Real Acumulado', key: 'sacRealAcum', isCumulative: true },
+        { label: 'SAC Proporcional Prov.', key: 'sacProporcionalAcum', isCumulative: true },
+        { label: 'Ganancia Bruta Acum.', key: 'gananciaBrutaAcum', bold: true, isCumulative: true },
         { label: '5. DEDUCCIONES GENERALES', section: true },
         { label: 'Alquiler 40%', key: 'alquiler40' },
         { label: 'Alquiler 10%', key: 'alquiler10' },
@@ -172,9 +172,10 @@ function AnnualView({ results }) {
         { label: 'Doceava Parte', key: 'dedEspecialDoceavaParte' },
         { label: 'Total Ded. Personales', key: 'totalDeduccionesPersonales', bold: true },
         { label: '7. RESULTADO', section: true },
+        { label: 'Deducciones Totales Acumuladas', key: 'deduccionesTotalesAcum', isCumulative: true },
         { label: 'Ganancia Neta Imponible', key: 'gananciaNeta' },
         { label: 'Impuesto Determinado', key: 'impuestoDeterminado' },
-        { label: 'Ret. Meses Anteriores', key: 'retencionesAnteriores' },
+        { label: 'Ret. Meses Anteriores', key: 'retencionesAnteriores', isCumulative: true },
         { label: 'Retención del Mes', key: 'retencionDelMes' },
         { label: 'Tope 35%', key: 'tope35' },
         { label: 'RETENCIÓN EFECTIVA', key: 'retencionEfectiva', bold: true, highlight: true },
@@ -188,6 +189,33 @@ function AnnualView({ results }) {
         return result[key];
     };
 
+    const renderRow = (row, i) => {
+        if (row.section) {
+            return (
+                <tr key={i} className="section-row">
+                    <td colSpan={14}>{row.label}</td>
+                </tr>
+            );
+        }
+
+        const values = results.map(r => getValue(r, row.key));
+        
+        // Sumar vs Mostrar último mes para Acumulados
+        const total = row.isCumulative 
+            ? values[values.length - 1] 
+            : values.reduce((a, b) => a + b, 0);
+
+        return (
+            <tr key={i} className={`${row.bold ? 'total-row' : ''} ${row.highlight ? 'highlight-row' : ''}`}>
+                <td>{row.label}</td>
+                {values.map((v, mi) => (
+                    <td key={mi}>{formatCurrency(v)}</td>
+                ))}
+                <td style={{ fontWeight: 'bold' }}>{formatCurrency(total)}</td>
+            </tr>
+        );
+    };
+
     return (
         <div className="annual-table-container">
             <table className="annual-table">
@@ -195,26 +223,11 @@ function AnnualView({ results }) {
                     <tr>
                         <th>Concepto</th>
                         {MONTHS_SHORT.map(m => <th key={m}>{m}</th>)}
+                        <th>TOTAL / ACTUAL</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {rows.map((row, i) => {
-                        if (row.section) {
-                            return (
-                                <tr key={i} className="section-row">
-                                    <td colSpan={13}>{row.label}</td>
-                                </tr>
-                            );
-                        }
-                        return (
-                            <tr key={i} className={`${row.bold ? 'total-row' : ''} ${row.highlight ? 'highlight-row' : ''}`}>
-                                <td>{row.label}</td>
-                                {results.map((r, mi) => (
-                                    <td key={mi}>{formatCurrency(getValue(r, row.key))}</td>
-                                ))}
-                            </tr>
-                        );
-                    })}
+                    {rows.map((row, i) => renderRow(row, i))}
                 </tbody>
             </table>
         </div>
