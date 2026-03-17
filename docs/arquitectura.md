@@ -2,7 +2,7 @@
 
 ## Arquitectura General
 
-La aplicación tiene **3 módulos principales** que replican las 4 hojas del Excel:
+La aplicación tiene **4 módulos principales** más una capa de backend con Firebase:
 
 ```mermaid
 graph LR
@@ -10,24 +10,34 @@ graph LR
     B[Parámetros Anuales] --> D
     C[Liquidación Mensual] --> D
     D --> E[Dashboard / Resumen]
+    F[(Firebase Firestore)] --> B
+    G[Admin PDF Upload] --> F
+    H[Firebase Auth] --> G
 ```
 
 ## Estructura del proyecto
 
 ```
 src/
+├── config/
+│   └── firebase.js            # Inicialización Firebase (Firestore + Auth)
 ├── engine/
 │   ├── calculationEngine.js   # Motor de cálculo: 15 pasos ARCA Mapeo V3
-│   └── defaultParams.js       # Parámetros 2025: escalas, deducciones, topes MoPRe
+│   ├── defaultParams.js       # Parámetros fallback 2025 (hardcodeados)
+│   ├── pdfParser.js           # Extrae texto de PDFs vía pdfjs-dist (browser)
+│   └── pdfExtractionLogic.js  # Regex para parsear tablas AFIP del texto extraído
 ├── hooks/
 │   └── useAppState.js         # Estado global + localStorage + import/export JSON
 ├── components/
+│   ├── ActiveYearBanner.jsx   # Banner superior: año fiscal activo
+│   ├── AdminLogin.jsx         # Login Firebase Auth para el panel de admin
+│   ├── AdminUploadParams.jsx  # Wizard carga PDFs AFIP → Firestore
 │   ├── LiquidacionMensual.jsx # Pantalla principal: ingreso mensual + vista anual
 │   ├── Dashboard.jsx          # KPIs + gráficos Chart.js + tabla Mapeo V3
 │   ├── ConfigPersonal.jsx     # Cónyuge, hijos, tipo deducción especial
-│   ├── ConfigParametros.jsx   # Editar escalas, deducciones, topes por semestre
+│   ├── ConfigParametros.jsx   # Editar escalas/deducciones + selector año Firebase
 │   └── Sidebar.jsx            # Navegación lateral con iconos
-├── App.jsx                    # Router principal
+├── App.jsx                    # Router principal + auth state listener
 ├── main.jsx                   # Entry point
 └── index.css                  # Design system (dark theme, glassmorphism, animaciones)
 ```
@@ -110,9 +120,33 @@ Resumen visual con:
 
 ### `Sidebar.jsx`
 
-Barra de navegación lateral con iconos para cada módulo.
+Barra de navegación lateral con iconos para cada módulo, incluyendo acceso al panel de administración.
+
+### `ActiveYearBanner.jsx`
+
+Banner fijo en la parte superior de la app que muestra el año fiscal activo. Recibe `year` desde `state.params.year`.
+
+### `AdminLogin.jsx`
+
+Formulario de login con Firebase Authentication (email/contraseña). Muestra mensajes de error en español. Solo visible al navegar a la sección Admin sin sesión activa.
+
+### `AdminUploadParams.jsx`
+
+Wizard de 2 pasos para cargar parámetros fiscales desde PDFs de AFIP:
+- **Paso 1:** Subida de 4 PDFs (deducciones sem1/sem2, escalas sem1/sem2)
+- **Paso 2:** Confirmación de parámetros manuales (MoPRe, % previsionales)
+- Guarda el resultado en Firestore bajo `tax_parameters/{año}`
 
 ---
+
+## Firebase (`src/config/firebase.js`)
+
+### Firestore — Colección `tax_parameters`
+Un documento por año fiscal. Lo escribe el admin con el wizard. Lo lee `ConfigParametros.jsx` al cargar la app para poblar el selector de años y al cambiar el año activo.
+
+### Authentication
+Email/Contraseña habilitado. Solo el usuario admin creado en Firebase Console puede acceder al wizard de carga. La sesión persiste entre recargas vía `onAuthStateChanged` en `App.jsx`.
+
 
 ## Persistencia y Estado (`src/hooks/useAppState.js`)
 
