@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DEFAULT_PARAMS_2025, MONTHS } from '../engine/defaultParams';
 import { formatCurrency, formatPercent } from '../engine/calculationEngine';
+import { db } from '../config/firebase';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 
 function EditableCell({ value, onChange }) {
     return (
@@ -17,6 +19,58 @@ function EditableCell({ value, onChange }) {
 
 export default function ConfigParametros({ params, setParams, resetToDefaults }) {
     const [activeSem, setActiveSem] = useState('sem1');
+    const [availableYears, setAvailableYears] = useState(['2025']);
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        // Fetch available years from Firebase
+        const fetchYears = async () => {
+            try {
+                const querySnapshot = await getDocs(collection(db, 'tax_parameters'));
+                const years = querySnapshot.docs.map(d => d.id).sort((a,b) => b-a);
+                if (years.length > 0 && !years.includes('2025')) {
+                     years.push('2025');
+                     years.sort((a,b) => b-a);
+                }
+                if (years.length > 0) {
+                    setAvailableYears(years);
+                }
+            } catch (e) {
+                console.warn("Could not fetch years from Firebase (might not be configured yet). Defaulting to 2025.");
+            }
+        };
+        fetchYears();
+    }, []);
+
+    const handleYearChange = async (e) => {
+        const selectedYear = e.target.value;
+        if (selectedYear === '2025') {
+            resetToDefaults();
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const docRef = doc(db, 'tax_parameters', selectedYear);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const firebaseParams = docSnap.data();
+                // Ensure the extracted year property is updated
+                setParams({ ...firebaseParams, year: parseInt(selectedYear) });
+                alert(`Parámetros del año ${selectedYear} cargados exitosamente.`);
+            } else {
+                alert('No se encontraron parámetros para el año seleccionado en la base de datos.');
+                // Revert to current 
+                e.target.value = params.year;
+            }
+        } catch (error) {
+            console.error("Error fetching rules:", error);
+            alert('Error al conectar con la base de datos para traer el nuevo año.');
+            e.target.value = params.year;
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const updateDedPersonal = (sem, key, value) => {
         setParams(prev => ({
@@ -64,11 +118,34 @@ export default function ConfigParametros({ params, setParams, resetToDefaults })
                     <h1>⚙️ Parámetros Anuales</h1>
                     <p className="subtitle">Configurá las deducciones, escalas y topes oficiales ARCA</p>
                 </div>
-                <button className="btn btn-ghost" onClick={() => {
-                    if (confirm('¿Restaurar todos los valores a los predeterminados 2025?')) resetToDefaults();
-                }}>
-                    🔄 Restaurar 2025
-                </button>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                        <label style={{ fontSize: 'var(--font-sm)', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                            Año Fiscal Activo:
+                        </label>
+                        <select 
+                            className="form-input" 
+                            style={{ padding: '6px 12px', fontWeight: 'bold' }}
+                            value={params.year || '2025'}
+                            onChange={handleYearChange}
+                            disabled={isLoading}
+                        >
+                            {availableYears.map(y => (
+                                <option key={y} value={y}>{y}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <button className="btn btn-ghost" onClick={() => {
+                        if (confirm('¿Restaurar todos los valores manuales a los oficiales de este año?')) {
+                             // If it's not 2025, ideally we fetch again, but for now we just reset to 2025 logic
+                             if (params.year === 2025 || !params.year) resetToDefaults();
+                             else handleYearChange({ target: { value: params.year.toString() } });
+                        }
+                    }} disabled={isLoading}>
+                        🔄 Restaurar Valores Naturales
+                    </button>
+                </div>
             </div>
 
             {/* Semester toggle */}

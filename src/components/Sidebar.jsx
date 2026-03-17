@@ -6,6 +6,7 @@ const NAV_ITEMS = [
     { id: 'config', icon: '👤', label: 'Configuración Personal' },
     { id: 'parametros', icon: '⚙️', label: 'Parámetros Anuales' },
     { id: 'guia', icon: '📖', label: 'Guía de Ayuda' },
+    { id: 'admin', icon: '🔐', label: 'Admin (Cargar Año)' }
 ];
 
 export default function Sidebar({ activeView, setActiveView, isOpen, onClose, exportData, importData, resetAllData, generatePDF }) {

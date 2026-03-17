@@ -6,6 +6,8 @@ import LiquidacionMensual from './components/LiquidacionMensual';
 import ConfigPersonal from './components/ConfigPersonal';
 import ConfigParametros from './components/ConfigParametros';
 import GuiaAyuda from './components/GuiaAyuda';
+import ActiveYearBanner from './components/ActiveYearBanner';
+import AdminUploadParams from './components/AdminUploadParams';
 import { generatePDFReport } from './engine/pdfReportGenerator';
 
 export default function App() {
@@ -22,6 +24,8 @@ export default function App() {
                 return <ConfigPersonal {...state} />;
             case 'parametros':
                 return <ConfigParametros {...state} />;
+            case 'admin':
+                return <AdminUploadParams />;
             case 'guia':
                 return <GuiaAyuda />;
             default:
@@ -30,8 +34,10 @@ export default function App() {
     };
 
     return (
-        <div className="app-layout">
-            <button
+        <>
+            <ActiveYearBanner year={state.params?.year} />
+            <div className="app-layout">
+                <button
                 className="mobile-menu-btn"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
             >
@@ -55,5 +61,6 @@ export default function App() {
                 </div>
             </main>
         </div>
+        </>
     );
 }
