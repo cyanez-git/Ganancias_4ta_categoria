@@ -25,3 +25,10 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+
+# Archivos locales de parámetros AFIP (PDFs y outputs de prueba)
+Parametros AFIP/
+pdf_output.txt
+pdf_output_utf8.txt
+test_pdf.cjs
+test_pdf.py

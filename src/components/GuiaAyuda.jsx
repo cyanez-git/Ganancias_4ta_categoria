@@ -12,20 +12,20 @@ export default function GuiaAyuda() {
                     <span style={{ fontSize: '1.4em' }}>🚀</span> Inicio Rápido
                 </h2>
                 <div className="guia-content">
-                    <p>Esta aplicación replica las fórmulas de la planilla Excel oficial de cálculo de retenciones, conforme al <strong>Mapeo V3 de ARCA</strong> (15 pasos).</p>
+                    <p>Esta aplicación replica las fórmulas de la planilla Excel oficial de cálculo de retenciones, conforme al <strong>Mapeo V3 de ARCA</strong> (15 pasos). Los parámetros fiscales (deducciones, escalas, topes) se actualizan dinámicamente desde la nube.</p>
                     <div className="guia-steps">
                         <div className="guia-step">
                             <div className="guia-step-number">1</div>
                             <div>
-                                <strong>Configurá tus datos personales</strong>
-                                <p>Ingresá si tenés cónyuge a cargo, cantidad de hijos y tipo de deducción especial en <em>Configuración Personal</em>.</p>
+                                <strong>Verificá el año fiscal activo</strong>
+                                <p>El <strong>banner rojo</strong> en la parte superior muestra el período con el que estás trabajando. Podés cambiarlo en <em>Parámetros Anuales</em>.</p>
                             </div>
                         </div>
                         <div className="guia-step">
                             <div className="guia-step-number">2</div>
                             <div>
-                                <strong>Verificá los parámetros del año</strong>
-                                <p>Los parámetros 2025 vienen precargados. Si necesitás ajustarlos, andá a <em>Parámetros Anuales</em>.</p>
+                                <strong>Configurá tus datos personales</strong>
+                                <p>Ingresá si tenés cónyuge a cargo, cantidad de hijos y tipo de deducción especial en <em>Configuración Personal</em>.</p>
                             </div>
                         </div>
                         <div className="guia-step">
@@ -97,11 +97,79 @@ export default function GuiaAyuda() {
                             <h3>Parámetros Anuales</h3>
                         </div>
                         <ul>
+                            <li><strong>Selector de año fiscal</strong>: los años disponibles se cargan desde la base de datos</li>
                             <li>Selector semestre (Ene-Jun / Jul-Dic)</li>
                             <li>Tablas editables: Deducciones personales, Escalas progresivas Art. 94, Topes MoPRe</li>
-                            <li>Botón "Restaurar 2025" para volver a valores por defecto</li>
+                            <li>Botón "Restaurar valores" para volver a los datos oficiales del año seleccionado</li>
                         </ul>
                     </div>
+                </div>
+            </div>
+
+            {/* Año fiscal activo y Firebase */}
+            <div className="card" style={{ marginBottom: '20px' }}>
+                <h2 className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '1.4em' }}>📅</span> Años Fiscales y Parámetros Dinámicos
+                </h2>
+                <div className="guia-content">
+                    <p>Los parámetros fiscales (deducciones, escalas, topes) se almacenan en la nube y se actualizan año a año sin necesidad de modificar la aplicación.</p>
+                    <div className="guia-info-box">
+                        <div className="guia-info-row">
+                            <span className="guia-info-label">Banner rojo</span>
+                            <span>Indica el año fiscal que está activo en toda la app. Cambiarlo en Parámetros Anuales afecta todos los cálculos.</span>
+                        </div>
+                        <div className="guia-info-row">
+                            <span className="guia-info-label">Selector de año</span>
+                            <span>En <em>Parámetros Anuales</em>, el dropdown lista los años disponibles en la base de datos. Al cambiar el año, los parámetros se descargan automáticamente.</span>
+                        </div>
+                        <div className="guia-info-row">
+                            <span className="guia-info-label">Fallback 2025</span>
+                            <span>Si no hay conexión o no se encuentran parámetros en la base de datos, la app usa los parámetros 2025 precargados localmente.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Panel admin */}
+            <div className="card" style={{ marginBottom: '20px' }}>
+                <h2 className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '1.4em' }}>🔐</span> Panel de Administrador (Carga de Nuevos Años)
+                </h2>
+                <div className="guia-content">
+                    <p>Cuando ARCA/AFIP publica las nuevas resoluciones anuales, el administrador puede cargar los parámetros del nuevo año directamente desde la aplicación, sin necesidad de modificar código.</p>
+                    <div className="guia-steps">
+                        <div className="guia-step">
+                            <div className="guia-step-number">1</div>
+                            <div>
+                                <strong>Accedé con tu cuenta de administrador</strong>
+                                <p>Navegá a <em>Admin (Cargar Año)</em> en el sidebar e ingresá con email y contraseña.</p>
+                            </div>
+                        </div>
+                        <div className="guia-step">
+                            <div className="guia-step-number">2</div>
+                            <div>
+                                <strong>Subí los 4 PDFs de AFIP</strong>
+                                <p>Deducciones y Escalas Art. 94 para primer y segundo semestre.</p>
+                            </div>
+                        </div>
+                        <div className="guia-step">
+                            <div className="guia-step-number">3</div>
+                            <div>
+                                <strong>Confirmá los parámetros manuales</strong>
+                                <p>Topes MoPRe mensuales y porcentajes previsionales (no están en los PDFs de AFIP).</p>
+                            </div>
+                        </div>
+                        <div className="guia-step">
+                            <div className="guia-step-number">4</div>
+                            <div>
+                                <strong>Guardar en la base de datos</strong>
+                                <p>Los parámetros quedan disponibles para todos los usuarios en el selector de año.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-sm)', marginTop: '12px' }}>
+                        <strong>PDFs requeridos:</strong> Deducciones Art. 30 (ene-jun y jul-dic) + Tablas Art. 94 (ene-jun y jul-dic). Se obtienen del sitio oficial de ARCA/AFIP.
+                    </p>
                 </div>
             </div>
 
@@ -124,7 +192,7 @@ export default function GuiaAyuda() {
                             <div className="guia-calc-icon">📌</div>
                             <div>
                                 <strong>SAC Proporcional</strong>
-                                <p>Acumulado/12 + Ajuste Semestral</p>
+                                <p>Acumulado/12 + Ajuste Semestral. Si se informa SAC real no se duplica la base.</p>
                             </div>
                         </div>
                         <div className="guia-calc-item">
@@ -152,7 +220,7 @@ export default function GuiaAyuda() {
                             <div className="guia-calc-icon">📌</div>
                             <div>
                                 <strong>Escalas Art. 94</strong>
-                                <p>9 tramos progresivos × 2 semestres</p>
+                                <p>9 tramos progresivos × 2 semestres — se actualizan dinámicamente desde Firebase</p>
                             </div>
                         </div>
                         <div className="guia-calc-item">
@@ -182,19 +250,23 @@ export default function GuiaAyuda() {
                     <div className="guia-info-box">
                         <div className="guia-info-row">
                             <span className="guia-info-label">Auto-guardado</span>
-                            <span>Tus datos se guardan automáticamente en el navegador (localStorage)</span>
+                            <span>Tus datos de liquidación se guardan automáticamente en el navegador (localStorage)</span>
                         </div>
                         <div className="guia-info-row">
                             <span className="guia-info-label">Exportar</span>
-                            <span>Descargá un archivo JSON con todos tus datos desde el sidebar (📥 Exportar JSON)</span>
+                            <span>Descargá un archivo JSON con todos tus datos desde el sidebar (💾 Guardar borrador)</span>
                         </div>
                         <div className="guia-info-row">
                             <span className="guia-info-label">Importar</span>
-                            <span>Cargá un archivo JSON previamente exportado (📤 Importar JSON)</span>
+                            <span>Cargá un archivo JSON previamente guardado (📂 Cargar borrador)</span>
                         </div>
                         <div className="guia-info-row">
                             <span className="guia-info-label">Reset</span>
-                            <span>Borrá todos los datos y empezá de cero (🗑️ Reset Todo)</span>
+                            <span>Borrá todos los datos de liquidación y empezá de cero (🗑️ Reset Todo)</span>
+                        </div>
+                        <div className="guia-info-row">
+                            <span className="guia-info-label">Parámetros fiscales</span>
+                            <span>Se almacenan en Firebase y se comparten entre todos los usuarios automáticamente</span>
                         </div>
                     </div>
                 </div>
