@@ -10,7 +10,7 @@
     },
     "dependencies": {
         "chart.js": "^4.4.7",
-        "firebase": "^12.10.0",
+        "firebase": "^12.11.0",
         "jspdf": "^4.1.0",
         "jspdf-autotable": "^5.0.7",
         "pdf-parse": "^2.4.5",

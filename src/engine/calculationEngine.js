@@ -116,8 +116,37 @@ export function calculateAllMonths(monthsData, config, params) {
             sacRealAcum += results[p].sacRealMes;
         }
 
-        // ── SAC Proporcional ─────────────────────────────────────
-        const sacProporcionalAcum = gananciaBrutaPuraAcum / 12;
+        // ── SAC Computable (Proporcional y Real) ─────────────────
+        let sacComputableAcum = 0;
+
+        if (m < 5) {
+            // Ene a May: se computa 1/12 acumulado (o el real si lo pagaron adelantado)
+            sacComputableAcum = Math.max(gananciaBrutaPuraAcum / 12, sacRealAcum);
+        } else if (m === 5) {
+            // Junio: Liquidación definitiva del 1er SAC. Se toma el SAC real acumulado del semestre.
+            sacComputableAcum = sacRealAcum > 0 ? sacRealAcum : gananciaBrutaPuraAcum / 12;
+        } else if (m < 11) {
+            // Jul a Nov: SAC definitivo del 1er sem + mayor(prov 2do sem, sac real 2do sem)
+            let sacRealSem1 = 0;
+            for (let p = 0; p <= 5; p++) {
+                sacRealSem1 += results[p].sacRealMes;
+            }
+            let gananciaBrutaPuraAcumSem2 = gananciaBrutaPuraMes; // mes actual
+            for (let p = 6; p < m; p++) {
+                gananciaBrutaPuraAcumSem2 += results[p].gananciaBrutaPuraMes;
+            }
+            let provSem2 = gananciaBrutaPuraAcumSem2 / 12;
+            let sacRealSem2 = sacRealAcum - sacRealSem1;
+            
+            sacComputableAcum = sacRealSem1 + Math.max(provSem2, sacRealSem2);
+        } else if (m === 11) {
+            // Dic: Liquidación definitiva anual. Se toma el SAC real total.
+            sacComputableAcum = sacRealAcum > 0 ? sacRealAcum : gananciaBrutaPuraAcum / 12;
+        }
+
+        const topeSACParaCalculos = sacComputableAcum;
+        const sacProporcionalAcum = sacComputableAcum; // retrocompatibilidad
+
         // El de este mes específico
         const sacProporcionalMensual = gananciaBrutaPuraMes / 12;
 
@@ -126,8 +155,6 @@ export function calculateAllMonths(monthsData, config, params) {
         const alquiler10 = data.alquilerPagado * 0.1;
 
         // Ganancia bruta con SAC para topes del 5%
-        // Tomamos el bruto puro + el mayor monto entre el diferencial proporcional vs el real que viene dado
-        const topeSACParaCalculos = Math.max(sacProporcionalAcum, sacRealAcum);
         const gananciaBrutaParaTopesAcum = gananciaBrutaPuraAcum + topeSACParaCalculos;
         
         // El tope del 5% debe ser MENSUALIZADO de la GNSI. Simplificando se suele tomar 
@@ -164,10 +191,13 @@ export function calculateAllMonths(monthsData, config, params) {
             data.adicionalesAntartida;
 
         // ── Deducciones generales acumuladas ──────────────────────
-        let deduccionesGeneralesAcum = totalDeduccionesGenerales;
+        // Separamos la deducción del 17% del SAC para atarla al SAC computable acumulado (y que se ajuste con el real)
+        let deduccionesGeneralesAcumSinSAC = totalDeduccionesGenerales - deduccionesSobreSAC;
         for (let p = 0; p < m; p++) {
-            deduccionesGeneralesAcum += results[p].totalDeduccionesGenerales;
+            deduccionesGeneralesAcumSinSAC += (results[p].totalDeduccionesGenerales - results[p].deduccionesSobreSAC);
         }
+        let deduccionesSobreSACAcum = sacComputableAcum * 0.17;
+        let deduccionesGeneralesAcum = deduccionesGeneralesAcumSinSAC + deduccionesSobreSACAcum;
 
         // ── PASO 6: Deducciones Personales ───────────────────────
         const mni = dedPersonales.gananciaNoImponible;
