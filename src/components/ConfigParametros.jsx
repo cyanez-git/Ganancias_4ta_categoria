@@ -44,10 +44,6 @@ export default function ConfigParametros({ params, setParams, resetToDefaults })
 
     const handleYearChange = async (e) => {
         const selectedYear = e.target.value;
-        if (selectedYear === '2025') {
-            resetToDefaults();
-            return;
-        }
 
         setIsLoading(true);
         try {
@@ -55,18 +51,26 @@ export default function ConfigParametros({ params, setParams, resetToDefaults })
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
                 const firebaseParams = docSnap.data();
-                // Ensure the extracted year property is updated
                 setParams({ ...firebaseParams, year: parseInt(selectedYear) });
-                alert(`Parámetros del año ${selectedYear} cargados exitosamente.`);
+                alert(`Parámetros del año ${selectedYear} cargados exitosamente desde Firebase.`);
             } else {
-                alert('No se encontraron parámetros para el año seleccionado en la base de datos.');
-                // Revert to current 
-                e.target.value = params.year;
+                if (selectedYear === '2025') {
+                    resetToDefaults();
+                    alert('No se encontraron parámetros en Firebase para 2025. Se restauraron los valores por defecto del sistema.');
+                } else {
+                    alert('No se encontraron parámetros para el año seleccionado en la base de datos.');
+                    e.target.value = params.year;
+                }
             }
         } catch (error) {
             console.error("Error fetching rules:", error);
-            alert('Error al conectar con la base de datos para traer el nuevo año.');
-            e.target.value = params.year;
+            if (selectedYear === '2025') {
+                resetToDefaults();
+                alert('Error al conectar con la base de datos. Se restauraron los valores por defecto locales para 2025.');
+            } else {
+                alert('Error al conectar con la base de datos para traer el nuevo año.');
+                e.target.value = params.year;
+            }
         } finally {
             setIsLoading(false);
         }
@@ -137,10 +141,8 @@ export default function ConfigParametros({ params, setParams, resetToDefaults })
                     </div>
 
                     <button className="btn btn-ghost" onClick={() => {
-                        if (confirm('¿Restaurar todos los valores manuales a los oficiales de este año?')) {
-                             // If it's not 2025, ideally we fetch again, but for now we just reset to 2025 logic
-                             if (params.year === 2025 || !params.year) resetToDefaults();
-                             else handleYearChange({ target: { value: params.year.toString() } });
+                        if (confirm('¿Restaurar todos los valores descargando la última versión oficial de este año desde la base de datos?')) {
+                             handleYearChange({ target: { value: (params.year || 2025).toString() } });
                         }
                     }} disabled={isLoading}>
                         🔄 Restaurar Valores Naturales
