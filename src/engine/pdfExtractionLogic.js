@@ -71,22 +71,28 @@ export function parseDeducciones(text) {
     const hijoIncMatch =
         text.match(/2\.1\.\s*Hijo incapacitado para el trabajo\s*([\d\.]+,\d{2})/i);
 
-    // Deducción Especial General (Apartado 1)
-    const dedEspMatch =
-        text.match(/Apartado 1\]\s*([\d\.]+,\d{2})/i) ||
-        text.match(/Apartado 1\]:\s*([\d\.]+,\d{2})/i) ||
-        text.match(/inciso c\),\s*Apartado 1\]\s*([\d\.]+,\d{2})/i);
+    // Deducción Especial General (Apartado 2 — "D)" en el PDF)
+    // Es la deducción que aplica a empleados en relación de dependencia (la más alta)
+    const dedEspGeneralMatch =
+        text.match(/Apartado 2\]\s*:?\s*([\d\.]+,\d{2})/i) ||
+        text.match(/inciso c\),?\s*Apartado 2\]\s*:?\s*([\d\.]+,\d{2})/i);
 
-    // Deducción Especial Profesionales (Apartado 1 - nuevos profesionales)
+    // Deducción Especial Profesionales (Apartado 1 — "nuevos profesionales/emprendedores")
     const dedEspProfMatch =
         text.match(/profesionales\/emprendedores[»\]"']\s*([\d\.]+,\d{2})/i) ||
         text.match(/emprendedores[^\n]*\]\s*([\d\.]+,\d{2})/i);
+
+    // Deducción Especial Apartado 1 (sin profesionales — fallback si no se encuentra Apartado 2)
+    const dedEspApt1Match =
+        text.match(/Apartado 1\]\s*:?\s*([\d\.]+,\d{2})/i) ||
+        text.match(/inciso c\),?\s*Apartado 1\]\s*:?\s*([\d\.]+,\d{2})/i);
 
     const mni = mniMatch ? extractFirstNumber(mniMatch[1]) : 0;
     const conyuge = conyugeMatch ? extractFirstNumber(conyugeMatch[1]) : 0;
     const hijo = hijoMatch ? extractFirstNumber(hijoMatch[1]) : 0;
     const hijoIncapacitado = hijoIncMatch ? extractFirstNumber(hijoIncMatch[1]) : 0;
-    const dedEspGeneral = dedEspMatch ? extractFirstNumber(dedEspMatch[1]) : 0;
+    const dedEspGeneral = dedEspGeneralMatch ? extractFirstNumber(dedEspGeneralMatch[1])
+        : (dedEspApt1Match ? extractFirstNumber(dedEspApt1Match[1]) : 0);
     const dedEspProfesionales = dedEspProfMatch ? extractFirstNumber(dedEspProfMatch[1]) : 0;
 
     console.debug('[parseDeducciones] Matches found:', {
@@ -94,7 +100,7 @@ export function parseDeducciones(text) {
         conyuge: conyugeMatch?.[1]?.slice(0, 15),
         hijo: hijoMatch?.[1]?.slice(0, 15),
         hijoInc: hijoIncMatch?.[1]?.slice(0, 15),
-        dedEsp: dedEspMatch?.[1]?.slice(0, 15),
+        dedEsp: dedEspGeneralMatch?.[1]?.slice(0, 15),
         dedEspProf: dedEspProfMatch?.[1]?.slice(0, 15),
     });
     console.debug('[parseDeducciones] Parsed values:', { mni, conyuge, hijo, hijoIncapacitado, dedEspGeneral, dedEspProfesionales });
