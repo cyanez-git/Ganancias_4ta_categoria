@@ -102,6 +102,12 @@ export function calculateAllMonths(monthsData, config, params) {
         const totalDescuentos = jubilacion + obraSocial + inssjp +
             data.aportesSindicales + data.otrosDescuentosObligatorios;
 
+        // ── Descuentos obligatorios acumulados ───────────────────
+        let descuentosObligatoriosAcum = totalDescuentos;
+        for (let p = 0; p < m; p++) {
+            descuentosObligatoriosAcum += results[p].totalDescuentos;
+        }
+
         // ── PASO 4: Ganancia Bruta ───────────────────────────────
         // Calculamos la ganancia bruta *pura* (sin contemplar el SAC cobrado en el mes)
         const gananciaBrutaPuraMes = totalIngresos + totalPluriempleoPuro - data.otrosDescuentosObligatorios;
@@ -234,7 +240,7 @@ export function calculateAllMonths(monthsData, config, params) {
         const gananciaBrutaConSACAcum = gananciaBrutaPuraAcum + topeSACParaCalculos + data.ajusteSACSemestral;
 
         // ── PASO 9: Deducciones totales ──────────────────────────
-        const deduccionesTotalesAcum = deduccionesGeneralesAcum + deduccionesPersonalesAcum;
+        const deduccionesTotalesAcum = descuentosObligatoriosAcum + deduccionesGeneralesAcum + deduccionesPersonalesAcum;
 
         // ── PASO 10: Ganancia Neta Sujeta a Impuesto ─────────────
         const gananciaNeta = Math.max(gananciaBrutaConSACAcum - deduccionesTotalesAcum, 0);
@@ -289,6 +295,7 @@ export function calculateAllMonths(monthsData, config, params) {
             obraSocial,
             inssjp,
             totalDescuentos,
+            descuentosObligatoriosAcum,
 
             // Ganancia bruta
             gananciaBrutaMes: gananciaBrutaMesConSACRecibo, // back-compat 
