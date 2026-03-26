@@ -38,6 +38,38 @@ function extractFirstNumber(str) {
 }
 
 /**
+ * Extract a deducción value from the accumulated monthly table by its lettered prefix (C), D), etc).
+ * In the PDF accumulated table, the structure is:
+ *   C) Deducción Especial [Artículo 30,
+ *   1.142.244,94 2.284.489,88 3.426.734,83    ← numbers line (ENERO, FEB, MAR)
+ *   inciso c), Apartado 1]:
+ *
+ * We search ONLY in the "IMPORTES ACUMULADOS" section (not the annual summary at the top).
+ * Returns the first AR number found near the prefix (= ENERO/JULIO monthly value).
+ */
+function extractDeduccionByPrefix(text, prefix) {
+    const lines = text.split('\n');
+
+    // Find where the accumulated table starts
+    const acumStart = lines.findIndex(l => /IMPORTES?\s*ACUMULADOS?\s*CORRESPONDIENTES/i.test(l));
+    if (acumStart === -1) return 0;
+
+    // Search from there for the prefix (e.g. "D)" or "C)")
+    const prefixPattern = new RegExp(`^${prefix}\\s*Deducci`, 'i');
+    for (let i = acumStart; i < lines.length; i++) {
+        if (prefixPattern.test(lines[i].trim())) {
+            // Found the header. Look at neighboring lines for numbers.
+            // The numbers could be on the next line or on the same line after the header.
+            for (let j = i; j < Math.min(i + 3, lines.length); j++) {
+                const num = extractFirstNumber(lines[j]);
+                if (num > 0) return num;
+            }
+        }
+    }
+    return 0;
+}
+
+/**
  * Parse deducciones personales from the PDF text.
  * Works for both sem1 (ene-jun) and sem2 (jul-dic) PDFs.
  * Extracts the FIRST accumulated monthly value (ENERO or JULIO column).
@@ -52,47 +84,49 @@ export function parseDeducciones(text) {
 
     // Strategy: Extract the first number from each concept row in the accumulated table.
     // The ENERO/JULIO accumulated value = monthly value for that semester.
+    
+    // CRÍTICO: El PDF tiene una tabla ANUAL al principio y una MENSUAL abajo.
+    // Debemos ignorar la tabla anual para no capturar los valores totales (mucho más altos).
+    const lines = text.split('\n');
+    const acumStart = lines.findIndex(l => /IMPORTES?\s*ACUMULADOS?\s*CORRESPONDIENTES/i.test(l) || /IMPORTE\s*DE\s*LAS\s*DEDUCCIONES\s*ACUMULADAS/i.test(l));
+    const accumulatedText = acumStart !== -1 ? lines.slice(acumStart).join('\n') : text;
 
     // MNI - "Ganancias no imponibles"
     const mniMatch =
-        text.match(/Ganancias no imponibles\s*\[Art[^\]]*\]\s*:?\s*([\d\.]+,\d{2})/i) ||
-        text.match(/Ganancias no imponibles\s*\[Art[^)]*\)\]\s*:?\s*([\d\.]+,\d{2})/i) ||
-        text.match(/inciso a\)\]:\s*([\d\.]+,\d{2})/i);
+        accumulatedText.match(/Ganancias no imponibles\s*\[Art[^\]]*\]\s*:?\s*([\d\.]+,\d{2})/i) ||
+        accumulatedText.match(/Ganancias no imponibles\s*\[Art[^)]*\)\]\s*:?\s*([\d\.]+,\d{2})/i) ||
+        accumulatedText.match(/inciso a\)\]:\s*([\d\.]+,\d{2})/i);
 
     // Cónyuge
     const conyugeMatch =
-        text.match(/1\.\s*C[oó]nyuge:\s*([\d\.]+,\d{2})/i);
+        accumulatedText.match(/1\.\s*C[oó]nyuge:\s*([\d\.]+,\d{2})/i);
 
     // Hijo
     const hijoMatch =
-        text.match(/2\.\s*Hijo:\s*([\d\.]+,\d{2})/i);
+        accumulatedText.match(/2\.\s*Hijo:\s*([\d\.]+,\d{2})/i);
 
     // Hijo incapacitado
     const hijoIncMatch =
-        text.match(/2\.1\.\s*Hijo incapacitado para el trabajo\s*([\d\.]+,\d{2})/i);
+        accumulatedText.match(/2\.1\.\s*Hijo incapacitado para el trabajo\s*([\d\.]+,\d{2})/i);
 
     // Deducción Especial General (Apartado 2 — "D)" en el PDF)
-    // Es la deducción que aplica a empleados en relación de dependencia (la más alta)
-    const dedEspGeneralMatch =
-        text.match(/Apartado 2\]\s*:?\s*([\d\.]+,\d{2})/i) ||
-        text.match(/inciso c\),?\s*Apartado 2\]\s*:?\s*([\d\.]+,\d{2})/i);
+    // Es la deducción que aplica a empleados en relación de dependencia (la más alta).
+    // En la tabla acumulada, el número aparece en la línea SIGUIENTE al header "D)".
+    const dedEspGeneralMatch = extractDeduccionByPrefix(text, 'D\\)');
 
     // Deducción Especial Profesionales (Apartado 1 — "nuevos profesionales/emprendedores")
     const dedEspProfMatch =
-        text.match(/profesionales\/emprendedores[»\]"']\s*([\d\.]+,\d{2})/i) ||
-        text.match(/emprendedores[^\n]*\]\s*([\d\.]+,\d{2})/i);
+        accumulatedText.match(/profesionales\/emprendedores[»\]"']\s*([\d\.]+,\d{2})/i) ||
+        accumulatedText.match(/emprendedores[^\n]*\]\s*([\d\.]+,\d{2})/i);
 
-    // Deducción Especial Apartado 1 (sin profesionales — fallback si no se encuentra Apartado 2)
-    const dedEspApt1Match =
-        text.match(/Apartado 1\]\s*:?\s*([\d\.]+,\d{2})/i) ||
-        text.match(/inciso c\),?\s*Apartado 1\]\s*:?\s*([\d\.]+,\d{2})/i);
+    // Deducción Especial Apartado 1 = "C)" en el PDF (fallback si no se encuentra Apartado 2)
+    const dedEspApt1Match = extractDeduccionByPrefix(text, 'C\\)');
 
     const mni = mniMatch ? extractFirstNumber(mniMatch[1]) : 0;
     const conyuge = conyugeMatch ? extractFirstNumber(conyugeMatch[1]) : 0;
     const hijo = hijoMatch ? extractFirstNumber(hijoMatch[1]) : 0;
     const hijoIncapacitado = hijoIncMatch ? extractFirstNumber(hijoIncMatch[1]) : 0;
-    const dedEspGeneral = dedEspGeneralMatch ? extractFirstNumber(dedEspGeneralMatch[1])
-        : (dedEspApt1Match ? extractFirstNumber(dedEspApt1Match[1]) : 0);
+    const dedEspGeneral = dedEspGeneralMatch || (dedEspApt1Match || 0);
     const dedEspProfesionales = dedEspProfMatch ? extractFirstNumber(dedEspProfMatch[1]) : 0;
 
     console.debug('[parseDeducciones] Matches found:', {
@@ -100,7 +134,7 @@ export function parseDeducciones(text) {
         conyuge: conyugeMatch?.[1]?.slice(0, 15),
         hijo: hijoMatch?.[1]?.slice(0, 15),
         hijoInc: hijoIncMatch?.[1]?.slice(0, 15),
-        dedEsp: dedEspGeneralMatch?.[1]?.slice(0, 15),
+        dedEsp: dedEspGeneralMatch,
         dedEspProf: dedEspProfMatch?.[1]?.slice(0, 15),
     });
     console.debug('[parseDeducciones] Parsed values:', { mni, conyuge, hijo, hijoIncapacitado, dedEspGeneral, dedEspProfesionales });
