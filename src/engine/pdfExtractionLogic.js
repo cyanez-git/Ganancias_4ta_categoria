@@ -91,96 +91,43 @@ export function parseDeducciones(text) {
     const acumStart = lines.findIndex(l => /IMPORTES?\s*ACUMULADOS?\s*CORRESPONDIENTES/i.test(l) || /IMPORTE\s*DE\s*LAS\s*DEDUCCIONES\s*ACUMULADAS/i.test(l));
     const accumulatedText = acumStart !== -1 ? lines.slice(acumStart).join('\n') : text;
 
-    // MNI - "Ganancias no imponibles"
-    const mniMatch =
-        accumulatedText.match(/Ganancias no imponibles\s*\[Art[^\]]*\]\s*:?\s*([\d\.]+,\d{2})/i) ||
-        accumulatedText.match(/Ganancias no imponibles\s*\[Art[^)]*\)\]\s*:?\s*([\d\.]+,\d{2})/i) ||
-        accumulatedText.match(/inciso a\)\]:\s*([\d\.]+,\d{2})/i);
-
-    // Cónyuge
-    const conyugeMatch =
-        accumulatedText.match(/1\.\s*C[oó]nyuge:\s*([\d\.]+,\d{2})/i);
-
-    // Hijo
-    const hijoMatch =
-        accumulatedText.match(/2\.\s*Hijo:\s*([\d\.]+,\d{2})/i);
-
-    // Hijo incapacitado
-    const hijoIncMatch =
-        accumulatedText.match(/2\.1\.\s*Hijo incapacitado para el trabajo\s*([\d\.]+,\d{2})/i);
-
-    // Deducción Especial General (Apartado 2 — "D)" en el PDF)
-    // Es la deducción que aplica a empleados en relación de dependencia (la más alta).
-    // En la tabla acumulada, el número aparece en la línea SIGUIENTE al header "D)".
-    const dedEspGeneralMatch = extractDeduccionByPrefix(text, 'D\\)');
-
-    // Deducción Especial Profesionales (Apartado 1 — "nuevos profesionales/emprendedores")
-    const dedEspProfMatch =
-        accumulatedText.match(/profesionales\/emprendedores[»\]"']\s*([\d\.]+,\d{2})/i) ||
-        accumulatedText.match(/emprendedores[^\n]*\]\s*([\d\.]+,\d{2})/i);
-
-    // Deducción Especial Apartado 1 = "C)" en el PDF (fallback si no se encuentra Apartado 2)
-    const dedEspApt1Match = extractDeduccionByPrefix(text, 'C\\)');
+    // Extraemos el PRIMER NÚMERO después de la etiqueta de la fila (A, B, 1, 2, C, D)
+    // El [^]*? salta cualquier texto o salto de línea (non-greedy) hasta llegar al formato numérico.
+    const mniMatch = accumulatedText.match(/A\)\s*Ganancias[^]*?([\d\.]+,\d{2})/i);
+    const conyugeMatch = accumulatedText.match(/1\.\s*C[oó]nyuge[^]*?([\d\.]+,\d{2})/i);
+    const hijoMatch = accumulatedText.match(/2\.\s*Hijo[^]*?([\d\.]+,\d{2})/i);
+    const hijoIncMatch = accumulatedText.match(/2\.1\.\s*Hijo[^]*?([\d\.]+,\d{2})/i);
+    const dedEspApt1Match = accumulatedText.match(/C\)\s*Deducci[^]*?([\d\.]+,\d{2})/i);
+    const dedEspGeneralMatch = accumulatedText.match(/D\)\s*Deducci[^]*?([\d\.]+,\d{2})/i);
+    const dedEspProfMatch = accumulatedText.match(/nuevos profesionales[^]*?([\d\.]+,\d{2})/i);
 
     const mni = mniMatch ? extractFirstNumber(mniMatch[1]) : 0;
     const conyuge = conyugeMatch ? extractFirstNumber(conyugeMatch[1]) : 0;
     const hijo = hijoMatch ? extractFirstNumber(hijoMatch[1]) : 0;
     const hijoIncapacitado = hijoIncMatch ? extractFirstNumber(hijoIncMatch[1]) : 0;
-    const dedEspGeneral = dedEspGeneralMatch || (dedEspApt1Match || 0);
+    const dedEspGeneral = dedEspGeneralMatch ? extractFirstNumber(dedEspGeneralMatch[1]) 
+                          : (dedEspApt1Match ? extractFirstNumber(dedEspApt1Match[1]) : 0);
     const dedEspProfesionales = dedEspProfMatch ? extractFirstNumber(dedEspProfMatch[1]) : 0;
 
-    console.debug('[parseDeducciones] Matches found:', {
-        mni: mniMatch?.[1]?.slice(0, 15),
-        conyuge: conyugeMatch?.[1]?.slice(0, 15),
-        hijo: hijoMatch?.[1]?.slice(0, 15),
-        hijoInc: hijoIncMatch?.[1]?.slice(0, 15),
-        dedEsp: dedEspGeneralMatch,
-        dedEspProf: dedEspProfMatch?.[1]?.slice(0, 15),
-    });
     console.debug('[parseDeducciones] Parsed values:', { mni, conyuge, hijo, hijoIncapacitado, dedEspGeneral, dedEspProfesionales });
 
-    // Fallback: if primary extraction fails, compute from known AFIP proportions
+    // Si no pudimos extraer el MNI, la tabla no se parseó correctamente
     if (!mni) {
-        console.warn('[parseDeducciones] Primary regex failed — attempting fallback heuristic');
-        return deduccionesFallback(text);
+        throw new Error("No se pudo extraer la Ganancia No Imponible (MNI) del PDF. El formato del documento no coincide con las etiquetas (A, B, C) esperadas.");
     }
 
     return {
         gananciaNoImponible: mni,
-        conyuge: conyuge || Math.round(mni * 0.9418 * 100) / 100,
-        hijo: hijo || Math.round(mni * 0.4748 * 100) / 100,
-        hijoIncapacitado: hijoIncapacitado || Math.round(mni * 0.9495 * 100) / 100,
-        deduccionEspecialGeneral: dedEspGeneral || Math.round(mni * 3.5007 * 100) / 100,
-        deduccionEspecialProfesionales: dedEspProfesionales || Math.round(mni * 4.0013 * 100) / 100,
+        // Si no aparecen en el PDF (pueden ser 0), los forzamos a 0 en lugar de fallback ciego
+        conyuge: conyuge || 0,
+        hijo: hijo || 0,
+        hijoIncapacitado: hijoIncapacitado || 0,
+        deduccionEspecialGeneral: dedEspGeneral || 0,
+        deduccionEspecialProfesionales: dedEspProfesionales || 0,
     };
 }
 
-/**
- * Heuristic fallback for parseDeducciones when regex fails.
- * Tries to extract large Argentine-format numbers and assign by known AFIP proportions.
- */
-function deduccionesFallback(text) {
-    // Extract all numbers ≥ 100.000 (likely to be monthly deductions, not percentages)
-    const allNumbers = [...text.matchAll(/([\d]{1,3}(?:\.[\d]{3})+,\d{2})/g)]
-        .map(m => parseArNumber(m[1]))
-        .filter(n => n >= 100000)
-        .sort((a, b) => a - b);
 
-    if (allNumbers.length === 0) {
-        throw new Error('No se pudieron extraer montos de deducciones del PDF.');
-    }
-
-    // Smallest number is likely MNI (Ganancia No Imponible)
-    const mni = allNumbers[0];
-    return {
-        gananciaNoImponible: mni,
-        conyuge: Math.round(mni * 0.9418 * 100) / 100,
-        hijo: Math.round(mni * 0.4748 * 100) / 100,
-        hijoIncapacitado: Math.round(mni * 0.9495 * 100) / 100,
-        deduccionEspecialGeneral: Math.round(mni * 3.5007 * 100) / 100,
-        deduccionEspecialProfesionales: Math.round(mni * 4.0013 * 100) / 100,
-    };
-}
 
 /**
  * Regex helpers for matching bracket rows in Art. 94 PDFs.
