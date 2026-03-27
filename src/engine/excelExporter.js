@@ -57,8 +57,8 @@ const ROWS = [
 
     { label: '7. RESULTADO', section: true },
     { label: 'Deducciones Totales Acumuladas', key: 'deduccionesTotalesAcum', isCumulative: true },
-    { label: 'Ganancia Neta Imponible', key: 'gananciaNeta' },
-    { label: 'Impuesto Determinado (Art. 94)', key: 'impuestoDeterminado' },
+    { label: 'Ganancia Neta Imponible', key: 'gananciaNeta', isCumulative: true },
+    { label: 'Impuesto Determinado (Art. 94)', key: 'impuestoDeterminado', isCumulative: true },
     { label: 'Retenciones Meses Anteriores', key: 'retencionesAnteriores', isCumulative: true },
     { label: 'Retención del Mes (antes de tope)', key: 'retencionDelMes' },
     { label: 'Tope 35% del Sueldo Neto', key: 'tope35' },
