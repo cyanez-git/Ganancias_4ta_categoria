@@ -164,15 +164,20 @@ function AnnualView({ results }) {
         { label: 'Alquiler 40%', key: 'alquiler40' },
         { label: 'Alquiler 10%', key: 'alquiler10' },
         { label: 'Medicina Prepaga', key: 'medicinaPreDeducible' },
+        { label: 'Ded. SAC 17% (mensual)', key: 'deduccionesSobreSAC' },
         { label: 'Total Ded. Generales', key: 'totalDeduccionesGenerales', bold: true },
         { label: '6. DEDUCCIONES PERSONALES', section: true },
         { label: 'Ganancia No Imponible', key: 'mni' },
         { label: 'Cónyuge', key: 'dedConyuge' },
         { label: 'Hijos', key: 'dedHijos' },
+        { label: 'Deducción Especial', key: 'dedEspecial' },
         { label: 'Doceava Parte', key: 'dedEspecialDoceavaParte' },
         { label: 'Total Ded. Personales', key: 'totalDeduccionesPersonales', bold: true },
         { label: '7. RESULTADO', section: true },
-        { label: 'Deducciones Totales Acumuladas', key: 'deduccionesTotalesAcum', isCumulative: true },
+        { label: 'Desc. Obligatorios Acum.', key: 'descuentosObligatoriosAcum', isCumulative: true },
+        { label: 'Ded. Generales Acum.', key: 'deduccionesGeneralesAcum', isCumulative: true },
+        { label: 'Ded. Personales Acum.', key: 'deduccionesPersonalesAcum', isCumulative: true },
+        { label: 'Deducciones Totales Acumuladas', key: 'deduccionesTotalesAcum', bold: true, isCumulative: true },
         { label: 'Ganancia Neta Imponible', key: 'gananciaNeta', isCumulative: true },
         { label: 'Impuesto Determinado', key: 'impuestoDeterminado', isCumulative: true },
         { label: 'Ret. Meses Anteriores', key: 'retencionesAnteriores', isCumulative: true },
@@ -304,7 +309,9 @@ export default function LiquidacionMensual({ monthsData, updateMonthField, resul
 
                     {/* 3. Descuentos Obligatorios */}
                     <Section title="Descuentos Obligatorios" icon="📉" total={result.totalDescuentos} defaultOpen={true}>
-                        <CalcField label="Base para Descuentos (tope MoPRe)" value={result.baseDescuentos} />
+                        <CalcField label="Base para Descuentos (tope MoPRe)" value={result.baseDescuentos}
+                            hint={(m === 5 || m === 11) ? 'En meses con SAC, el empleador aplica un tope adicional del 50% sobre el SAC cobrado' : undefined}
+                        />
                         <ManualOverrideField
                             label="Jubilación 11%"
                             autoValue={result.jubilacionAuto}
@@ -383,9 +390,15 @@ export default function LiquidacionMensual({ monthsData, updateMonthField, resul
                             <CalcField label="Seguro de Vida deducible (5% GNSI)" value={result.seguroVidaDeducible} />
                             <CalcField label="Donaciones deducibles (5% GNSI)" value={result.donacionesDeducible} />
                             <CalcField
-                                label="Deducciones sobre SAC (17%)"
+                                label="Ded. SAC 17% (mensual provisorio)"
                                 value={result.deduccionesSobreSAC}
-                                hint="del SAC proporcional acumulado. Equivale a los aportes previsionales sobre el aguinaldo."
+                                hint="Cuota mensual estimada: 17% de la doceava parte del sueldo bruto del mes."
+                            />
+                            <CalcField
+                                label="Ded. SAC 17% Acumulada (definitiva)"
+                                value={result.deduccionesSobreSACAcum}
+                                className="highlight"
+                                hint="Valor real usado en el cálculo impositivo. En Jun/Dic se ajusta al 17% del SAC real cobrado."
                             />
                         </div>
                         <CalcField label="Total Deducciones Generales" value={result.totalDeduccionesGenerales} className="total-row" />

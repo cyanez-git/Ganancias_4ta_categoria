@@ -202,8 +202,8 @@ export function calculateAllMonths(monthsData, config, params) {
         for (let p = 0; p < m; p++) {
             deduccionesGeneralesAcumSinSAC += (results[p].totalDeduccionesGenerales - results[p].deduccionesSobreSAC);
         }
-        let deduccionesSobreSACAcum = sacComputableAcum * 0.17;
-        let deduccionesGeneralesAcum = deduccionesGeneralesAcumSinSAC + deduccionesSobreSACAcum;
+        const deduccionesSobreSACAcum = sacComputableAcum * 0.17;
+        const deduccionesGeneralesAcum = deduccionesGeneralesAcumSinSAC + deduccionesSobreSACAcum;
 
         // ── PASO 6: Deducciones Personales ───────────────────────
         const mni = dedPersonales.gananciaNoImponible;
@@ -311,6 +311,7 @@ export function calculateAllMonths(monthsData, config, params) {
 
             gananciaBrutaConSAC: gananciaBrutaParaTopesMes,
             gananciaBrutaConSACAcum,
+            gananciaBrutaAcum: gananciaBrutaConSACAcum, // alias for Excel/UI
 
             // Promedio remuneración bruta (para DEA)
             promedioRemuneracion: gananciaBrutaPuraAcum / (m + 1),
@@ -323,6 +324,7 @@ export function calculateAllMonths(monthsData, config, params) {
             seguroVidaDeducible,
             donacionesDeducible,
             deduccionesSobreSAC,
+            deduccionesSobreSACAcum,
             totalDeduccionesGenerales,
             deduccionesGeneralesAcum,
 

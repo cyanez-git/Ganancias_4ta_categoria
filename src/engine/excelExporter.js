@@ -43,7 +43,8 @@ const ROWS = [
     { label: 'Educación deducible', key: 'educacionDeducible' },
     { label: 'Seguro de Vida deducible', key: 'seguroVidaDeducible' },
     { label: 'Donaciones deducibles', key: 'donacionesDeducible' },
-    { label: 'Deducciones sobre SAC (17%)', key: 'deduccionesSobreSAC' },
+    { label: 'Deducciones sobre SAC (17%) mensual', key: 'deduccionesSobreSAC' },
+    { label: 'Ded. SAC 17% Acumulada (definitiva)', key: 'deduccionesSobreSACAcum', isCumulative: true },
     { label: 'Total Deducciones Generales', key: 'totalDeduccionesGenerales' },
 
     { label: '6. DEDUCCIONES PERSONALES', section: true },
@@ -56,6 +57,9 @@ const ROWS = [
     { label: 'Total Deducciones Personales', key: 'totalDeduccionesPersonales' },
 
     { label: '7. RESULTADO', section: true },
+    { label: 'Desc. Obligatorios Acum.', key: 'descuentosObligatoriosAcum', isCumulative: true },
+    { label: 'Ded. Generales Acum.', key: 'deduccionesGeneralesAcum', isCumulative: true },
+    { label: 'Ded. Personales Acum.', key: 'deduccionesPersonalesAcum', isCumulative: true },
     { label: 'Deducciones Totales Acumuladas', key: 'deduccionesTotalesAcum', isCumulative: true },
     { label: 'Ganancia Neta Imponible', key: 'gananciaNeta', isCumulative: true },
     { label: 'Impuesto Determinado (Art. 94)', key: 'impuestoDeterminado', isCumulative: true },
