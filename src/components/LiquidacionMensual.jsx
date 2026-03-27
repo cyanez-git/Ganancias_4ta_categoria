@@ -147,7 +147,9 @@ function AnnualView({ results }) {
         { label: '2. PLURIEMPLEO', section: true },
         { label: 'Total Pluriempleo', key: 'totalPluriempleo', bold: true },
         { label: '3. DESCUENTOS', section: true },
-        { label: 'Base Descuentos (tope MoPRe)', key: 'baseDescuentos' },
+        { label: 'Base Sueldo (tope MoPRe)', key: 'baseDescuentosSueldo' },
+        { label: 'Base SAC (tope 50% MoPRe)', key: 'baseDescuentosSAC' },
+        { label: 'Total Base Descuentos', key: 'baseDescuentos', bold: true },
         { label: 'Jubilación 11%', key: 'jubilacion' },
         { label: 'Obra Social 3%', key: 'obraSocial' },
         { label: 'INSSJP 3%', key: 'inssjp' },
@@ -175,7 +177,7 @@ function AnnualView({ results }) {
         { label: 'Total Ded. Personales', key: 'totalDeduccionesPersonales', bold: true },
         { label: '7. RESULTADO', section: true },
         { label: 'Desc. Obligatorios Acum.', key: 'descuentosObligatoriosAcum', isCumulative: true },
-        { label: 'Ded. Generales Acum.', key: 'deduccionesGeneralesAcum', isCumulative: true },
+        { label: 'Ded. Generales Acum. (ajustada)', key: 'deduccionesGeneralesAcum', isCumulative: true },
         { label: 'Ded. Personales Acum.', key: 'deduccionesPersonalesAcum', isCumulative: true },
         { label: 'Deducciones Totales Acumuladas', key: 'deduccionesTotalesAcum', bold: true, isCumulative: true },
         { label: 'Ganancia Neta Imponible', key: 'gananciaNeta', isCumulative: true },
@@ -309,9 +311,15 @@ export default function LiquidacionMensual({ monthsData, updateMonthField, resul
 
                     {/* 3. Descuentos Obligatorios */}
                     <Section title="Descuentos Obligatorios" icon="📉" total={result.totalDescuentos} defaultOpen={true}>
-                        <CalcField label="Base para Descuentos (tope MoPRe)" value={result.baseDescuentos}
-                            hint={(m === 5 || m === 11) ? 'En meses con SAC, el empleador aplica un tope adicional del 50% sobre el SAC cobrado' : undefined}
-                        />
+                        {result.sacRealMes > 0 ? (
+                            <div style={{ paddingBottom: '8px', marginBottom: '8px' }}>
+                                <CalcField label="Base Sueldo (tope MoPRe)" value={result.baseDescuentosSueldo} />
+                                <CalcField label="Base SAC (tope 50% MoPRe)" value={result.baseDescuentosSAC} />
+                                <CalcField label="Total Base Descuentos" value={result.baseDescuentos} className="highlight" />
+                            </div>
+                        ) : (
+                            <CalcField label="Base para Descuentos (tope MoPRe)" value={result.baseDescuentos} />
+                        )}
                         <ManualOverrideField
                             label="Jubilación 11%"
                             autoValue={result.jubilacionAuto}
@@ -402,6 +410,14 @@ export default function LiquidacionMensual({ monthsData, updateMonthField, resul
                             />
                         </div>
                         <CalcField label="Total Deducciones Generales" value={result.totalDeduccionesGenerales} className="total-row" />
+                        {result.sacRealMes > 0 && (
+                            <CalcField 
+                                label="Total Ded. Generales Acum. (ajustada)" 
+                                value={result.deduccionesGeneralesAcum} 
+                                className="highlight" 
+                                hint="Acumulado real del año usando el SAC definitivo." 
+                            />
+                        )}
                     </Section>
 
                     {/* 6. Deducciones Personales */}

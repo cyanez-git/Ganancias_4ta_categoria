@@ -76,19 +76,21 @@ export function calculateAllMonths(monthsData, config, params) {
         const pluriempleoBolsillo = totalPluriempleoPuro + data.sacPluriempleo;
 
         // ── PASO 3: Descuentos Obligatorios ──────────────────────
-        // Base para descuentos con tope MoPRe
-        const baseDescuentos = Math.min(
-            data.sueldoBasico +
+        // Base para descuentos con tope MoPRe separado para sueldo y SAC
+        const sueldoParaMoPre = data.sueldoBasico +
             data.adicionalesHabituales +
             data.antiguedad +
             data.comisiones +
             data.plusVacacional +
             data.otrosRemunerativos +
-            data.sacAguinaldo +
-            data.retribucionesHabitualesPluriempleo +
-            data.sacPluriempleo,
-            topeMoPre
-        );
+            data.retribucionesHabitualesPluriempleo;
+
+        const sacParaMoPre = data.sacAguinaldo + data.sacPluriempleo;
+
+        const baseDescuentosSueldo = Math.min(sueldoParaMoPre, topeMoPre);
+        const baseDescuentosSAC = Math.min(sacParaMoPre, topeMoPre / 2);
+        
+        const baseDescuentos = baseDescuentosSueldo + baseDescuentosSAC;
 
         const jubilacionAuto = baseDescuentos * params.porcentajes.jubilacion;
         const obraSocialAuto = baseDescuentos * params.porcentajes.obraSocial;
@@ -288,6 +290,8 @@ export function calculateAllMonths(monthsData, config, params) {
 
             // Descuentos
             baseDescuentos,
+            baseDescuentosSueldo,
+            baseDescuentosSAC,
             jubilacionAuto,
             obraSocialAuto,
             inssjpAuto,

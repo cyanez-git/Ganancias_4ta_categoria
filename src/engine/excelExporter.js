@@ -55,7 +55,9 @@ const ROWS = [
     { label: 'Total Pluriempleo', key: 'totalPluriempleo', isTotal: true },
 
     { label: '3. DESCUENTOS OBLIGATORIOS', section: true },
-    { label: 'Base Descuentos (tope MoPRe)', key: 'baseDescuentos' },
+    { label: 'Base Sueldo (tope MoPRe)', key: 'baseDescuentosSueldo' },
+    { label: 'Base SAC (tope 50% MoPRe)', key: 'baseDescuentosSAC' },
+    { label: 'Total Base Descuentos', key: 'baseDescuentos', isTotal: true },
     { label: 'Jubilación 11%', key: 'jubilacion' },
     { label: 'Obra Social 3%', key: 'obraSocial' },
     { label: 'INSSJP 3%', key: 'inssjp' },
@@ -93,7 +95,7 @@ const ROWS = [
 
     { label: '7. RESULTADO', section: true },
     { label: 'Desc. Obligatorios Acum.', key: 'descuentosObligatoriosAcum', isCumulative: true, isAccum: true },
-    { label: 'Ded. Generales Acum.', key: 'deduccionesGeneralesAcum', isCumulative: true, isAccum: true },
+    { label: 'Ded. Generales Acum. (ajustada)', key: 'deduccionesGeneralesAcum', isCumulative: true, isAccum: true },
     { label: 'Ded. Personales Acum.', key: 'deduccionesPersonalesAcum', isCumulative: true, isAccum: true },
     { label: 'Deducciones Totales Acumuladas', key: 'deduccionesTotalesAcum', isCumulative: true, isTotal: true },
     { label: 'Ganancia Neta Imponible', key: 'gananciaNeta', isCumulative: true, isResult: true },
