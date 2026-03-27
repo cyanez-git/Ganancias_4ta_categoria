@@ -252,126 +252,41 @@ function preprocessEscalasText(text) {
     return merged.join('\n');
 }
 
-export function parseEscalas(text, startMonth = 'ENERO') {
-    console.debug(`[parseEscalas] Looking for month: ${startMonth}. Total lines: ${text.split('\n').length}`);
+export function parseEscalas(text) {
+    console.debug(`[parseEscalas] Looking for first tax bracket table (annual base). Total lines: ${text.split('\n').length}`);
 
     // Pre-process to recombine split lines (affects 2026+ PDFs)
     const normalizedText = preprocessEscalasText(text);
+    const lines = normalizedText.split('\n').map(l => l.trim());
 
-    // Try Format A first (month on separate line)
-    let result = parseEscalasFormatA(normalizedText, startMonth);
-    if (result.length > 0) {
-        console.debug(`[parseEscalas] Format A matched: ${result.length} tramos for ${startMonth}`);
-        return result;
+    // Find the first line that parses as a tramo
+    const firstTramoIdx = lines.findIndex(l => parseTramoLine(l) !== null);
+
+    if (firstTramoIdx === -1) {
+        const preview = lines.slice(0, 30).join('\n');
+        console.error(`[parseEscalas] No tramos found in PDF. First 30 lines:\n`, preview);
+        throw new Error(`No se encontraron escalas del Art. 94 en el PDF.`);
     }
-
-    // Fall back to Format B (month glued to first number)
-    result = parseEscalasFormatB(normalizedText, startMonth);
-    if (result.length > 0) {
-        console.debug(`[parseEscalas] Format B (legacy) matched: ${result.length} tramos for ${startMonth}`);
-        return result;
-    }
-
-    // Neither format worked
-    const preview = normalizedText.split('\n').slice(0, 30).join('\n');
-    console.error(`[parseEscalas] No tramos found for ${startMonth}. First 30 lines:\n`, preview);
-    throw new Error(`No se encontraron tramos Art. 94 para el mes ${startMonth} en el PDF.`);
-}
-
-/**
- * Format A: Month name appears on its own line between tramo rows.
- * Strategy:
- *   1. Find the line that says exactly the month name (e.g. "Enero")
- *   2. Collect tramo rows going UP from that line (before the month name)
- *   3. Collect tramo rows going DOWN from that line (after the month name)
- *   4. Combine in order
- */
-function parseEscalasFormatA(text, startMonth) {
-    const lines = text.split('\n').map(l => l.trim());
-    const monthPattern = new RegExp(`^${startMonth}$`, 'i');
-
-    // Find the line index of the target month
-    const monthLineIdx = lines.findIndex(l => monthPattern.test(l));
-    if (monthLineIdx === -1) return [];
 
     const tramos = [];
 
-    // Collect tramos ABOVE the month name (walk upwards)
-    const tramosAbove = [];
-    for (let i = monthLineIdx - 1; i >= 0; i--) {
-        const tramo = parseTramoLine(lines[i]);
-        if (tramo) {
-            tramosAbove.unshift(tramo); // prepend to maintain order
-        } else {
-            break; // stop at first non-tramo line (table header)
-        }
-    }
-    tramos.push(...tramosAbove);
-
-    // Collect tramos BELOW the month name (walk downwards)
-    for (let i = monthLineIdx + 1; i < lines.length; i++) {
+    // Walk downwards collecting all tramos for this first table
+    for (let i = firstTramoIdx; i < lines.length; i++) {
         const line = lines[i];
-        const tramo = parseTramoLine(line);
-        if (tramo) {
-            tramos.push(tramo);
-            if (tramo.hasta === Infinity) break; // last tramo
-        } else if (MONTH_LINE_RE.test(line)) {
-            break; // hit the next month
-        } else if (/Ganancia neta acumulada/i.test(line)) {
-            break; // hit the next table header
-        }
-        // Skip non-matching lines (empty lines, headers, etc.)
-    }
-
-    return tramos;
-}
-
-/**
- * Format B (legacy): Month name glued to a tramo row.
- * e.g. "ENERO570.139,38 1.140.278,75 61.448,36 19 570.139,38"
- * The month name can appear on any tramo (not necessarily the first).
- * Strategy: find the line, parse the glued tramo, then collect tramos above and below.
- */
-function parseEscalasFormatB(text, startMonth) {
-    const lines = text.split('\n').map(l => l.trim());
-    // Match month name followed by a digit (glued to the tramo row)
-    const gluedPattern = new RegExp(`^${startMonth}\\d`, 'i');
-
-    const monthLineIdx = lines.findIndex(l => gluedPattern.test(l));
-    if (monthLineIdx === -1) return [];
-
-    const tramos = [];
-
-    // Collect tramos ABOVE the glued line (walk upwards)
-    const tramosAbove = [];
-    for (let i = monthLineIdx - 1; i >= 0; i--) {
-        const tramo = parseTramoLine(lines[i]);
-        if (tramo) {
-            tramosAbove.unshift(tramo);
-        } else {
-            break;
-        }
-    }
-    tramos.push(...tramosAbove);
-
-    // Parse the glued line itself (parseTramoLine strips the month prefix)
-    const gluedTramo = parseTramoLine(lines[monthLineIdx]);
-    if (gluedTramo) tramos.push(gluedTramo);
-
-    // Collect tramos BELOW the glued line (walk downwards)
-    for (let i = monthLineIdx + 1; i < lines.length; i++) {
-        const line = lines[i];
-        // Stop if we hit another month (glued or standalone)
-        if (MONTH_LINE_RE.test(line)) break;
-        if (/^(ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE|OCTUBRE|NOVIEMBRE|DICIEMBRE)\d/i.test(line)) break;
-        if (/Ganancia [Nn]eta [Aa]cumulada/i.test(line)) break;
+        if (!line) continue;
 
         const tramo = parseTramoLine(line);
         if (tramo) {
             tramos.push(tramo);
-            if (tramo.hasta === Infinity) break;
+            if (tramo.hasta === Infinity) break; // Finished the table
+        } else {
+            // If it's a month name randomly interspersed, just skip
+            if (MONTH_LINE_RE.test(line)) continue;
+            // Otherwise, if we hit another header or unrelated text, assume table is done
+            if (/Ganancia/i.test(line) || /Art/i.test(line)) break;
         }
     }
 
+    console.debug(`[parseEscalas] Extracted ${tramos.length} brackets from annual table.`);
     return tramos;
 }

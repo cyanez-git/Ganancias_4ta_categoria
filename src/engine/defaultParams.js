@@ -29,31 +29,29 @@ export const DEFAULT_PARAMS_2025 = {
         },
     },
 
-    // ── Escalas Progresivas Art. 94 ────────────────────────────
+    // ── Escalas Progresivas Art. 94 (TABLAS ANUALES) ───────────
     escalas: {
-        // Enero a Junio 2025
         sem1: [
-            { desde: 0, hasta: 126697.64, fijo: 0, porcentaje: 0.05, excedenteDe: 0 },
-            { desde: 126697.64, hasta: 253395.28, fijo: 6334.88, porcentaje: 0.09, excedenteDe: 126697.64 },
-            { desde: 253395.28, hasta: 380092.92, fijo: 17737.67, porcentaje: 0.12, excedenteDe: 253395.28 },
-            { desde: 380092.92, hasta: 570139.38, fijo: 32941.39, porcentaje: 0.15, excedenteDe: 380092.92 },
-            { desde: 570139.38, hasta: 1140278.75, fijo: 61448.36, porcentaje: 0.19, excedenteDe: 570139.38 },
-            { desde: 1140278.75, hasta: 1710418.13, fijo: 169774.84, porcentaje: 0.23, excedenteDe: 1140278.75 },
-            { desde: 1710418.13, hasta: 2565627.20, fijo: 300906.89, porcentaje: 0.27, excedenteDe: 1710418.13 },
-            { desde: 2565627.20, hasta: 3848440.79, fijo: 531813.34, porcentaje: 0.31, excedenteDe: 2565627.20 },
-            { desde: 3848440.79, hasta: Infinity, fijo: 929485.56, porcentaje: 0.35, excedenteDe: 3848440.79 },
+            { desde: 0, hasta: 1520371.68, fijo: 0, porcentaje: 0.05, excedenteDe: 0 },
+            { desde: 1520371.68, hasta: 3040743.36, fijo: 76018.56, porcentaje: 0.09, excedenteDe: 1520371.68 },
+            { desde: 3040743.36, hasta: 4561115.04, fijo: 212852.04, porcentaje: 0.12, excedenteDe: 3040743.36 },
+            { desde: 4561115.04, hasta: 6841672.56, fijo: 395296.68, porcentaje: 0.15, excedenteDe: 4561115.04 },
+            { desde: 6841672.56, hasta: 13683345.00, fijo: 737380.32, porcentaje: 0.19, excedenteDe: 6841672.56 },
+            { desde: 13683345.00, hasta: 20525017.56, fijo: 2037298.08, porcentaje: 0.23, excedenteDe: 13683345.00 },
+            { desde: 20525017.56, hasta: 30787526.40, fijo: 3610882.68, porcentaje: 0.27, excedenteDe: 20525017.56 },
+            { desde: 30787526.40, hasta: 46181289.48, fijo: 6381760.08, porcentaje: 0.31, excedenteDe: 30787526.40 },
+            { desde: 46181289.48, hasta: Infinity, fijo: 11153826.72, porcentaje: 0.35, excedenteDe: 46181289.48 },
         ],
-        // Julio a Diciembre 2025
         sem2: [
-            { desde: 0, hasta: 886883.47, fijo: 0, porcentaje: 0.05, excedenteDe: 0 },
-            { desde: 886883.47, hasta: 1773766.95, fijo: 44344.17, porcentaje: 0.09, excedenteDe: 886883.47 },
-            { desde: 1773766.95, hasta: 2660650.42, fijo: 124163.69, porcentaje: 0.12, excedenteDe: 1773766.95 },
-            { desde: 2660650.42, hasta: 3990975.64, fijo: 230589.70, porcentaje: 0.15, excedenteDe: 2660650.42 },
-            { desde: 3990975.64, hasta: 7981951.27, fijo: 430138.49, porcentaje: 0.19, excedenteDe: 3990975.64 },
-            { desde: 7981951.27, hasta: 11972926.91, fijo: 1188423.86, porcentaje: 0.23, excedenteDe: 7981951.27 },
-            { desde: 11972926.91, hasta: 17959390.37, fijo: 2106348.25, porcentaje: 0.27, excedenteDe: 11972926.91 },
-            { desde: 17959390.37, hasta: 26939085.55, fijo: 3722693.39, porcentaje: 0.31, excedenteDe: 17959390.37 },
-            { desde: 26939085.55, hasta: Infinity, fijo: 6506398.89, porcentaje: 0.35, excedenteDe: 26939085.55 },
+            { desde: 0, hasta: 1520371.68, fijo: 0, porcentaje: 0.05, excedenteDe: 0 },
+            { desde: 1520371.68, hasta: 3040743.36, fijo: 76018.56, porcentaje: 0.09, excedenteDe: 1520371.68 },
+            { desde: 3040743.36, hasta: 4561115.04, fijo: 212852.04, porcentaje: 0.12, excedenteDe: 3040743.36 },
+            { desde: 4561115.04, hasta: 6841672.56, fijo: 395296.68, porcentaje: 0.15, excedenteDe: 4561115.04 },
+            { desde: 6841672.56, hasta: 13683345.00, fijo: 737380.32, porcentaje: 0.19, excedenteDe: 6841672.56 },
+            { desde: 13683345.00, hasta: 20525017.56, fijo: 2037298.08, porcentaje: 0.23, excedenteDe: 13683345.00 },
+            { desde: 20525017.56, hasta: 30787526.40, fijo: 3610882.68, porcentaje: 0.27, excedenteDe: 20525017.56 },
+            { desde: 30787526.40, hasta: 46181289.48, fijo: 6381760.08, porcentaje: 0.31, excedenteDe: 30787526.40 },
+            { desde: 46181289.48, hasta: Infinity, fijo: 11153826.72, porcentaje: 0.35, excedenteDe: 46181289.48 },
         ],
     },
 

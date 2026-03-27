@@ -248,7 +248,17 @@ export function calculateAllMonths(monthsData, config, params) {
         const gananciaNeta = Math.max(gananciaBrutaConSACAcum - deduccionesTotalesAcum, 0);
 
         // ── PASO 11: Impuesto Determinado ────────────────────────
-        const impuestoDeterminado = calcularImpuestoEscalas(gananciaNeta, escalas);
+        // La tabla "escalas" es ANUAL. Necesitamos la tabla acumulada a este mes (m de 0 a 11).
+        const factorMes = (m + 1) / 12;
+        const escalasAcumuladasMes = escalas.map(t => ({
+            desde: t.desde * factorMes,
+            hasta: (t.hasta === Infinity) ? Infinity : t.hasta * factorMes,
+            fijo: t.fijo * factorMes,
+            porcentaje: t.porcentaje, // % se mantiene igual
+            excedenteDe: t.excedenteDe * factorMes
+        }));
+
+        const impuestoDeterminado = calcularImpuestoEscalas(gananciaNeta, escalasAcumuladasMes);
 
         // ── PASO 12-14: Retenciones ──────────────────────────────
         let retencionesAnteriores = 0;
