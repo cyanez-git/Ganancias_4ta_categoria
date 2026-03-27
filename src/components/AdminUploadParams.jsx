@@ -3,6 +3,7 @@ import { db } from '../config/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { extractTextFromPDF } from '../engine/pdfParser';
 import { parseDeducciones, parseEscalas } from '../engine/pdfExtractionLogic';
+import { MONTHS_SHORT } from '../engine/defaultParams';
 
 export default function AdminUploadParams() {
     const [step, setStep] = useState(1);
@@ -150,9 +151,32 @@ export default function AdminUploadParams() {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                         <div>
                             <h4>Topes MoPRe</h4>
-                            <div style={{ fontSize: 'var(--font-sm)', color: 'var(--text-secondary)', marginBottom: '10px' }}>Tope de base imponible previsional a cargar en el mes:</div>
-                            <input type="number" className="form-input" value={manualParams.topesMoPre[0]} onChange={(e) => setManualParams({...manualParams, topesMoPre: Array(12).fill(Number(e.target.value))})} placeholder="Ej: 2910574" />
-                            <small>(Este número se replicará automáticamente para todos los meses provisionalmente)</small>
+                            <div style={{ fontSize: 'var(--font-sm)', color: 'var(--text-secondary)', marginBottom: '10px' }}>Tope de base imponible previsional aplicable por mes. (Al modificar Ene, se autocompletan los siguientes).</div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                {MONTHS_SHORT.map((mes, idx) => (
+                                    <div key={mes} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <label style={{ width: '35px', fontSize: 'var(--font-sm)', fontWeight: 'bold' }}>{mes}</label>
+                                        <input 
+                                            type="number" 
+                                            className="form-input" 
+                                            value={manualParams.topesMoPre[idx]} 
+                                            onChange={(e) => {
+                                                const val = Number(e.target.value);
+                                                const newTopes = [...manualParams.topesMoPre];
+                                                newTopes[idx] = val;
+                                                
+                                                // Auto-fill down if Jan is modified
+                                                if (idx === 0) {
+                                                    for (let i = 1; i < 12; i++) {
+                                                        newTopes[i] = val;
+                                                    }
+                                                }
+                                                setManualParams({ ...manualParams, topesMoPre: newTopes });
+                                            }}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
                         </div>
 
                         <div>
