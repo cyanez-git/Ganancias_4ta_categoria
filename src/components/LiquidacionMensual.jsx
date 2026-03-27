@@ -167,6 +167,7 @@ function AnnualView({ results }) {
         { label: 'Alquiler 10%', key: 'alquiler10' },
         { label: 'Medicina Prepaga', key: 'medicinaPreDeducible' },
         { label: 'Ded. SAC 17% (mensual)', key: 'deduccionesSobreSAC' },
+        { label: 'Ded. SAC 17% Acumulada (definitiva)', key: 'deduccionesSobreSACAcum', isCumulative: true },
         { label: 'Total Ded. Generales', key: 'totalDeduccionesGenerales', bold: true },
         { label: '6. DEDUCCIONES PERSONALES', section: true },
         { label: 'Ganancia No Imponible', key: 'mni' },
