@@ -3,7 +3,7 @@ import { db } from '../config/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { extractTextFromPDF } from '../engine/pdfParser';
 import { parseDeducciones, parseEscalas } from '../engine/pdfExtractionLogic';
-import { MONTHS_SHORT } from '../engine/defaultParams';
+import { MONTHS_SHORT, DEFAULT_PARAMS_2025 } from '../engine/defaultParams';
 
 export default function AdminUploadParams() {
     const [step, setStep] = useState(1);
@@ -13,14 +13,14 @@ export default function AdminUploadParams() {
     
     // Manual parameters to confirm
     const [manualParams, setManualParams] = useState({
-        topesMoPre: Array(12).fill(2910574),
+        topesMoPre: [...DEFAULT_PARAMS_2025.topesMoPre],
         porcentajes: {
-            jubilacion: 0.11,
-            obraSocial: 0.03,
-            inssjp: 0.03
+            jubilacion: DEFAULT_PARAMS_2025.porcentajes.jubilacion,
+            obraSocial: DEFAULT_PARAMS_2025.porcentajes.obraSocial,
+            inssjp: DEFAULT_PARAMS_2025.porcentajes.inssjp
         },
         incrementoDeduccionEspecial: 0.22,
-        topeRetencion: 0.35
+        topeRetencion: DEFAULT_PARAMS_2025.topeRetencion
     });
 
     const [parsedData, setParsedData] = useState(null);
