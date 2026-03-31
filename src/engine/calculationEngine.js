@@ -202,7 +202,7 @@ export function calculateAllMonths(monthsData, config, params) {
 
         let deduccionesSobreSAC = 0;
         if (m !== 5 && m !== 11) {
-            deduccionesSobreSAC = (descuentosObligatoriosMes + totalDeduccionesGeneralesSinSAC) / 12;
+            deduccionesSobreSAC = (totalDescuentos + totalDeduccionesGeneralesSinSAC) / 12;
         }
 
         const totalDeduccionesGenerales = totalDeduccionesGeneralesSinSAC + deduccionesSobreSAC;
