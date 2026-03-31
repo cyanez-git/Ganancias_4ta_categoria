@@ -175,10 +175,13 @@ export function calculateAllMonths(monthsData, config, params) {
         const seguroVidaDeducible = Math.min(data.primasSeguroVida, gananciaBrutaParaTopesMes * 0.05);
         const donacionesDeducible = Math.min(data.donaciones, gananciaBrutaParaTopesMes * 0.05);
 
-        // Deducción especial para el SAC (17%). Aplica sobre la porción elegida de aguinaldo.
-        const deduccionesSobreSAC = sacProporcionalMensual * 0.17;
+        // ── Deducción Proporcional Mensual SAC (1/12 AFIP) ─────────
+        // Según AFIP, la provisión mensual no es el 17% del SAC, sino la 12va parte de la sumatoria
+        // de Descuentos Obligatorios de ley + Otras Deducciones Generales.
+        // Además, en los meses de cobro real (Junio m=5 y Diciembre m=11) esta cuota es CERO
+        // y se anula lo acumulado provisionalmente en el semestre.
 
-        const totalDeduccionesGenerales =
+        const totalDeduccionesGeneralesSinSAC =
             alquiler40 + alquiler10 +
             medicinaPreDeducible +
             educacionDeducible +
@@ -187,7 +190,6 @@ export function calculateAllMonths(monthsData, config, params) {
             data.interesesHipotecarios +
             donacionesDeducible +
             data.otrasDeducciones +
-            deduccionesSobreSAC +
             data.primasSeguridadMixtos +
             data.pagosFCIRetiro +
             data.gastosSepelio +
@@ -198,13 +200,29 @@ export function calculateAllMonths(monthsData, config, params) {
             data.gastosEquipamientoTrabajo +
             data.adicionalesAntartida;
 
+        let deduccionesSobreSAC = 0;
+        if (m !== 5 && m !== 11) {
+            deduccionesSobreSAC = (descuentosObligatoriosMes + totalDeduccionesGeneralesSinSAC) / 12;
+        }
+
+        const totalDeduccionesGenerales = totalDeduccionesGeneralesSinSAC + deduccionesSobreSAC;
+
         // ── Deducciones generales acumuladas ──────────────────────
-        // Separamos la deducción del 17% del SAC para atarla al SAC computable acumulado (y que se ajuste con el real)
-        let deduccionesGeneralesAcumSinSAC = totalDeduccionesGenerales - deduccionesSobreSAC;
+        let deduccionesGeneralesAcumSinSAC = totalDeduccionesGeneralesSinSAC;
         for (let p = 0; p < m; p++) {
             deduccionesGeneralesAcumSinSAC += (results[p].totalDeduccionesGenerales - results[p].deduccionesSobreSAC);
         }
-        const deduccionesSobreSACAcum = sacComputableAcum * 0.17;
+
+        let deduccionesSobreSACAcum = 0;
+        if (m === 5 || m === 11) {
+            // El escudo provisorio desaparece reemplazado por retenciones reales sobre SAC
+            deduccionesSobreSACAcum = 0;
+        } else if (m > 0) {
+            deduccionesSobreSACAcum = results[m-1].deduccionesSobreSACAcum + deduccionesSobreSAC;
+        } else {
+            deduccionesSobreSACAcum = deduccionesSobreSAC;
+        }
+
         const deduccionesGeneralesAcum = deduccionesGeneralesAcumSinSAC + deduccionesSobreSACAcum;
 
         // ── PASO 6: Deducciones Personales ───────────────────────

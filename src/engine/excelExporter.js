@@ -80,8 +80,8 @@ const ROWS = [
     { label: 'Educación deducible', key: 'educacionDeducible' },
     { label: 'Seguro de Vida deducible', key: 'seguroVidaDeducible' },
     { label: 'Donaciones deducibles', key: 'donacionesDeducible' },
-    { label: 'Ded. SAC 17% (mensual)', key: 'deduccionesSobreSAC' },
-    { label: 'Ded. SAC 17% Acumulada (definitiva)', key: 'deduccionesSobreSACAcum', isCumulative: true, isAccum: true },
+    { label: 'Ded. SAC (1/12 Proporcional AFIP)', key: 'deduccionesSobreSAC' },
+    { label: 'Ded. SAC Proporcional Acumulada', key: 'deduccionesSobreSACAcum', isCumulative: true, isAccum: true },
     { label: 'Total Deducciones Generales', key: 'totalDeduccionesGenerales', isTotal: true },
 
     { label: '6. DEDUCCIONES PERSONALES', section: true },

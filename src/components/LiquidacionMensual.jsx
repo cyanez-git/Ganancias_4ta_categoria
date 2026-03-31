@@ -166,8 +166,8 @@ function AnnualView({ results }) {
         { label: 'Alquiler 40%', key: 'alquiler40' },
         { label: 'Alquiler 10%', key: 'alquiler10' },
         { label: 'Medicina Prepaga', key: 'medicinaPreDeducible' },
-        { label: 'Ded. SAC 17% (mensual)', key: 'deduccionesSobreSAC' },
-        { label: 'Ded. SAC 17% Acumulada (definitiva)', key: 'deduccionesSobreSACAcum', isCumulative: true },
+        { label: 'Ded. SAC (1/12 Proporcional AFIP)', key: 'deduccionesSobreSAC' },
+        { label: 'Ded. SAC Proporcional Acumulada', key: 'deduccionesSobreSACAcum', isCumulative: true },
         { label: 'Total Ded. Generales', key: 'totalDeduccionesGenerales', bold: true },
         { label: '6. DEDUCCIONES PERSONALES', section: true },
         { label: 'Ganancia No Imponible', key: 'mni' },
@@ -399,15 +399,15 @@ export default function LiquidacionMensual({ monthsData, updateMonthField, resul
                             <CalcField label="Seguro de Vida deducible (5% GNSI)" value={result.seguroVidaDeducible} />
                             <CalcField label="Donaciones deducibles (5% GNSI)" value={result.donacionesDeducible} />
                             <CalcField
-                                label="Ded. SAC 17% (mensual provisorio)"
+                                label="Ded. SAC (1/12 Proporcional AFIP)"
                                 value={result.deduccionesSobreSAC}
-                                hint="Cuota mensual estimada: 17% de la doceava parte del sueldo bruto del mes."
+                                hint="Estimación AFIP provisoria: 1/12 de los Descuentos de Ley + Deducciones Generales del mes."
                             />
                             <CalcField
-                                label="Ded. SAC 17% Acumulada (definitiva)"
+                                label="Ded. SAC Proporcional Acumulada"
                                 value={result.deduccionesSobreSACAcum}
                                 className="highlight"
-                                hint="Valor real usado en el cálculo impositivo. En Jun/Dic se ajusta al 17% del SAC real cobrado."
+                                hint="Escudo fiscal acumulado. Se anula a cero en Jun/Dic cuando se tributa sobre el SAC real."
                             />
                         </div>
                         <CalcField label="Total Deducciones Generales" value={result.totalDeduccionesGenerales} className="total-row" />
