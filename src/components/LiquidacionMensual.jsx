@@ -105,14 +105,15 @@ function ManualOverrideField({ label, autoValue, manualKey, manualValue, onReset
     );
 }
 
-function CalcField({ label, value, className = '', hint }) {
+function CalcField({ label, value, className = '', hint, isRefund }) {
+    const valueClass = isRefund && value < 0 ? 'positive' : (value < 0 ? 'negative' : '');
     return (
         <div className={`calc-row ${className}`}>
             <div className="calc-label">
                 {label}
                 {hint && <span className="hint">{hint}</span>}
             </div>
-            <div className={`calc-value ${value < 0 ? 'negative' : ''}`}>
+            <div className={`calc-value ${valueClass}`}>
                 {formatCurrency(value)}
             </div>
         </div>
@@ -446,12 +447,22 @@ export default function LiquidacionMensual({ monthsData, updateMonthField, resul
                         {IMPUESTO_FIELDS.map(f => (
                             <InputField key={f.key} field={f} value={data[f.key]} onChange={handleChange} />
                         ))}
-                        <CalcField label="Retención del Mes (antes de tope)" value={result.retencionDelMes} />
-                        <CalcField label="Tope 35% del Sueldo Neto" value={result.tope35} />
                         <CalcField
-                            label={`RETENCIÓN EFECTIVA${data.retencionEfectivaManual != null && data.retencionEfectivaManual !== '' ? ' (manual)' : ' (calculada)'}`}
+                            label={result.retencionDelMes < 0 ? '💚 Devolución del Mes' : 'Retención del Mes (antes de tope)'}
+                            value={result.retencionDelMes}
+                            hint={result.retencionDelMes < 0 ? 'Se retuvo de más en meses anteriores — el empleador debe devolver' : undefined}
+                            isRefund={true}
+                        />
+                        {result.retencionDelMes > 0 && (
+                            <CalcField label="Tope 35% del Sueldo Neto" value={result.tope35} />
+                        )}
+                        <CalcField
+                            label={result.retencionEfectiva < 0
+                                ? `💚 DEVOLUCIÓN${data.retencionEfectivaManual != null && data.retencionEfectivaManual !== '' ? ' (manual)' : ' (calculada)'}`
+                                : `RETENCIÓN EFECTIVA${data.retencionEfectivaManual != null && data.retencionEfectivaManual !== '' ? ' (manual)' : ' (calculada)'}`}
                             value={result.retencionEfectiva}
                             className="total-row"
+                            isRefund={true}
                         />
                         {result.diferenciaNoRetenida > 0 && (
                             <CalcField label="⚠️ Diferencia no retenida (se posterga)" value={result.diferenciaNoRetenida} />

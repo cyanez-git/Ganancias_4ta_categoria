@@ -279,27 +279,31 @@ export function calculateAllMonths(monthsData, config, params) {
         const impuestoDeterminado = calcularImpuestoEscalas(gananciaNeta, escalasAcumuladasMes);
 
         // ── PASO 12-14: Retenciones ──────────────────────────────
+        // Acumulamos retención neta: lo efectivamente retenido MENOS lo reintegrado
         let retencionesAnteriores = 0;
         for (let p = 0; p < m; p++) {
             retencionesAnteriores += results[p].retencionEfectiva;
-            retencionesAnteriores += results[p].data.retencionesReintegradas;
+            retencionesAnteriores -= results[p].data.retencionesReintegradas;
         }
 
         // ── PASO 15: Retención del Mes ──────────────────────────
-        const retencionDelMes = Math.max(
-            impuestoDeterminado - data.pagosACuenta - retencionesAnteriores + data.retencionesReintegradas,
-            0
-        );
+        // Puede ser NEGATIVO: significa que se retuvo de más y el empleador debe devolver
+        const retencionDelMes =
+            impuestoDeterminado - data.pagosACuenta - retencionesAnteriores + data.retencionesReintegradas;
 
-        // Tope 35%
+        // Tope 35% solo aplica a retenciones positivas; las devoluciones van completas
         const sueldoNeto = ingresoBolsillo + pluriempleoBolsillo - totalDescuentos;
         const tope35 = sueldoNeto * params.topeRetencion;
-        const retencionEfectivaCalculada = Math.min(retencionDelMes, tope35);
+        const retencionEfectivaCalculada = retencionDelMes > 0
+            ? Math.min(retencionDelMes, tope35)
+            : retencionDelMes; // devolución completa, sin tope
         // Si el usuario ingresó la retención real sufrida, se usa esa
         const retencionEfectiva = (data.retencionEfectivaManual != null && data.retencionEfectivaManual !== '')
             ? Number(data.retencionEfectivaManual)
             : retencionEfectivaCalculada;
-        const diferenciaNoRetenida = retencionDelMes - retencionEfectivaCalculada;
+        const diferenciaNoRetenida = retencionDelMes > 0
+            ? retencionDelMes - retencionEfectivaCalculada
+            : 0; // sin diferencia en devoluciones
 
         // Sueldo neto final
         const sueldoNetoFinal = ingresoBolsillo + pluriempleoBolsillo - totalDescuentos - retencionEfectiva;
