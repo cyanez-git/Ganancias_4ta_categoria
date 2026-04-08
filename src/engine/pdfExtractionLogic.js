@@ -281,8 +281,19 @@ export function parseEscalas(text) {
     let currentTramos = [];
     let currentRawLines = [];
 
+    // Safely figure out if we should wait for the specific phrase
+    // (If the phrase is not in the PDF at all, we just start immediately so it doesn't break)
+    let hasStarted = !/IMPORTES ACUMULADOS CORRESPONDIENTES A CADA MES/i.test(normalizedText);
+
     // 1. Extract all completely valid tables (blocks of 9 tramos ending in Infinity)
     for (const line of lines) {
+        if (!hasStarted) {
+            if (/IMPORTES ACUMULADOS CORRESPONDIENTES A CADA MES/i.test(line)) {
+                hasStarted = true;
+            }
+            continue;
+        }
+
         const tramo = parseTramoLine(line);
         if (tramo) {
             currentTramos.push(tramo);
