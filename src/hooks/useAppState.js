@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { DEFAULT_PARAMS_2025, createEmptyYearData, createDefaultConfig, generateMonthlyScalesFromAnnual } from '../engine/defaultParams';
+import { DEFAULT_PARAMS_2025, createEmptyYearData, createDefaultConfig, generateMonthlyScalesFromAnnual, escalasFromFirestore } from '../engine/defaultParams';
 import { calculateAllMonths } from '../engine/calculationEngine';
+import { db } from '../config/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 const STORAGE_KEY = 'ganancias-4ta-cat-data';
 
@@ -88,6 +90,44 @@ export function useAppState() {
 
     // Calculate results whenever inputs change
     const results = calculateAllMonths(monthsData, config, params);
+
+    // ── Auto-sync: fetch deduccionesPersonales & escalas from Firebase on mount ──
+    useEffect(() => {
+        async function syncFromFirebase() {
+            try {
+                const year = params.year || 2025;
+                const docRef = doc(db, 'tax_parameters', year.toString());
+                const docSnap = await getDoc(docRef);
+                if (!docSnap.exists()) {
+                    console.info(`[sync] No Firebase data for year ${year}, using local values.`);
+                    return;
+                }
+                const fbData = docSnap.data();
+                let updated = false;
+                const patch = {};
+
+                // Sync deducciones personales
+                if (fbData.deduccionesPersonales) {
+                    patch.deduccionesPersonales = fbData.deduccionesPersonales;
+                    updated = true;
+                }
+
+                // Sync escalas (convert from Firestore format)
+                if (fbData.escalas) {
+                    patch.escalas = escalasFromFirestore(fbData.escalas);
+                    updated = true;
+                }
+
+                if (updated) {
+                    console.info(`[sync] Synced deduccionesPersonales & escalas from Firebase (year ${year}).`);
+                    setParams(prev => ({ ...prev, ...patch }));
+                }
+            } catch (e) {
+                console.warn('[sync] Could not sync from Firebase, using local values:', e.message);
+            }
+        }
+        syncFromFirebase();
+    }, []); // Run once on mount
 
     // Auto-save
     useEffect(() => {
