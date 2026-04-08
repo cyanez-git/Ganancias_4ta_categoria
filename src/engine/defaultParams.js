@@ -21,6 +21,68 @@ export function generateMonthlyScalesFromAnnual(annual) {
     });
 }
 
+/**
+ * Convert escalas Array[12] to Firestore-compatible format.
+ * Firestore does NOT support nested arrays, so we convert to an object
+ * with string keys: { "0": [tramos], "1": [tramos], ..., "11": [tramos] }
+ * Also converts Infinity to null for JSON serialization.
+ */
+export function escalasToFirestore(escalasArray) {
+    const obj = {};
+    for (let m = 0; m < escalasArray.length; m++) {
+        obj[m.toString()] = escalasArray[m].map(t => ({
+            ...t,
+            hasta: t.hasta === Infinity ? null : t.hasta,
+        }));
+    }
+    return obj;
+}
+
+/**
+ * Convert Firestore escalas object back to Array[12].
+ * Handles both old format { sem1, sem2 } and new format { "0": [...], "1": [...] }.
+ * Restores Infinity from null values.
+ */
+export function escalasFromFirestore(escalasData) {
+    // New format: object with numeric string keys
+    if (escalasData && !Array.isArray(escalasData) && !escalasData.sem1) {
+        return Array.from({ length: 12 }, (_, m) => {
+            const tramos = escalasData[m.toString()];
+            if (!tramos) return null;
+            return tramos.map(t => ({
+                ...t,
+                hasta: t.hasta === null ? Infinity : t.hasta,
+            }));
+        });
+    }
+    // Old format { sem1, sem2 } — should not happen from Firebase anymore, but handle gracefully
+    if (escalasData?.sem1) {
+        const sem1 = escalasData.sem1;
+        const sem2 = escalasData.sem2 || sem1;
+        // Restore Infinity
+        [sem1, sem2].forEach(arr => {
+            if (arr?.length) {
+                const last = arr[arr.length - 1];
+                if (last.hasta === null) last.hasta = Infinity;
+            }
+        });
+        return Array.from({ length: 12 }, (_, m) => {
+            const base = m < 6 ? sem1 : sem2;
+            const factor = (m + 1) / 12;
+            return base.map(t => ({
+                desde: +(t.desde * factor).toFixed(2),
+                hasta: t.hasta === Infinity ? Infinity : +(t.hasta * factor).toFixed(2),
+                fijo: +(t.fijo * factor).toFixed(2),
+                porcentaje: t.porcentaje,
+                excedenteDe: +(t.excedenteDe * factor).toFixed(2),
+            }));
+        });
+    }
+    // Already an array
+    if (Array.isArray(escalasData)) return escalasData;
+    return null;
+}
+
 export const DEFAULT_PARAMS_2025 = {
     year: 2025,
     label: 'Año Fiscal 2025',

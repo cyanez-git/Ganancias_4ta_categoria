@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { DEFAULT_PARAMS_2025, MONTHS } from '../engine/defaultParams';
 import { formatCurrency, formatPercent } from '../engine/calculationEngine';
+import { escalasFromFirestore } from '../engine/defaultParams';
 import { db } from '../config/firebase';
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 
@@ -52,6 +53,10 @@ export default function ConfigParametros({ params, setParams, resetToDefaults })
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
                 const firebaseParams = docSnap.data();
+                // Convert escalas from Firestore format to Array[12]
+                if (firebaseParams.escalas) {
+                    firebaseParams.escalas = escalasFromFirestore(firebaseParams.escalas);
+                }
                 setParams({ ...firebaseParams, year: parseInt(selectedYear) });
                 alert(`Parámetros del año ${selectedYear} cargados exitosamente desde Firebase.`);
             } else {

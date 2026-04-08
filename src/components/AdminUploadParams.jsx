@@ -3,7 +3,7 @@ import { db } from '../config/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { extractTextFromPDF } from '../engine/pdfParser';
 import { parseDeducciones, parseEscalas } from '../engine/pdfExtractionLogic';
-import { MONTHS_SHORT, DEFAULT_PARAMS_2025, generateMonthlyScalesFromAnnual } from '../engine/defaultParams';
+import { MONTHS_SHORT, DEFAULT_PARAMS_2025, generateMonthlyScalesFromAnnual, escalasToFirestore } from '../engine/defaultParams';
 
 export default function AdminUploadParams() {
     const [step, setStep] = useState(1);
@@ -82,7 +82,9 @@ export default function AdminUploadParams() {
             const finalDoc = {
                 year: parseInt(year),
                 ...parsedData, // Auto-extracted
-                ...manualParams // Manually confirmed
+                ...manualParams, // Manually confirmed
+                // Convert escalas Array[12] to Firestore-compatible object format
+                escalas: escalasToFirestore(parsedData.escalas),
             };
             
             await setDoc(doc(db, 'tax_parameters', year.toString()), finalDoc);
