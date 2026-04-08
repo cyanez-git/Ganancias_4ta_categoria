@@ -19,6 +19,7 @@ function EditableCell({ value, onChange }) {
 
 export default function ConfigParametros({ params, setParams, resetToDefaults }) {
     const [activeSem, setActiveSem] = useState('sem1');
+    const [activeEscalaMonth, setActiveEscalaMonth] = useState(0);
     const [availableYears, setAvailableYears] = useState(['2025']);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -86,13 +87,14 @@ export default function ConfigParametros({ params, setParams, resetToDefaults })
         }));
     };
 
-    const updateEscala = (sem, index, key, value) => {
+    const updateEscala = (monthIdx, index, key, value) => {
         setParams(prev => {
-            const newEscalas = [...prev.escalas[sem]];
-            newEscalas[index] = { ...newEscalas[index], [key]: value };
+            const newEscalas = [...prev.escalas];
+            newEscalas[monthIdx] = [...newEscalas[monthIdx]];
+            newEscalas[monthIdx][index] = { ...newEscalas[monthIdx][index], [key]: value };
             return {
                 ...prev,
-                escalas: { ...prev.escalas, [sem]: newEscalas },
+                escalas: newEscalas,
             };
         });
     };
@@ -226,11 +228,21 @@ export default function ConfigParametros({ params, setParams, resetToDefaults })
 
             {/* Escalas Progresivas */}
             <div className="card" style={{ marginTop: 'var(--space-lg)' }}>
-                <div className="card-header">
+                <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div className="card-title">
                         <span className="icon">📈</span>
-                        Escalas Progresivas Art. 94 ({activeSem === 'sem1' ? 'Enero - Junio' : 'Julio - Diciembre'})
+                        Escalas Progresivas Art. 94 — {MONTHS[activeEscalaMonth]}
                     </div>
+                    <select
+                        className="form-input"
+                        style={{ width: 'auto', padding: '4px 30px 4px 10px', fontSize: 'var(--font-sm)' }}
+                        value={activeEscalaMonth}
+                        onChange={(e) => setActiveEscalaMonth(Number(e.target.value))}
+                    >
+                        {MONTHS.map((mes, i) => (
+                            <option key={i} value={i}>{mes}</option>
+                        ))}
+                    </select>
                 </div>
                 <div className="annual-table-container">
                     <table className="annual-table">
@@ -244,20 +256,20 @@ export default function ConfigParametros({ params, setParams, resetToDefaults })
                             </tr>
                         </thead>
                         <tbody>
-                            {params.escalas[activeSem].map((tramo, i) => (
+                            {(params.escalas[activeEscalaMonth] || []).map((tramo, i) => (
                                 <tr key={i}>
                                     <td>
-                                        <EditableCell value={tramo.desde} onChange={(v) => updateEscala(activeSem, i, 'desde', v)} />
+                                        <EditableCell value={tramo.desde} onChange={(v) => updateEscala(activeEscalaMonth, i, 'desde', v)} />
                                     </td>
                                     <td>
                                         {tramo.hasta === Infinity ? (
                                             <span style={{ color: 'var(--text-muted)' }}>∞</span>
                                         ) : (
-                                            <EditableCell value={tramo.hasta} onChange={(v) => updateEscala(activeSem, i, 'hasta', v)} />
+                                            <EditableCell value={tramo.hasta} onChange={(v) => updateEscala(activeEscalaMonth, i, 'hasta', v)} />
                                         )}
                                     </td>
                                     <td>
-                                        <EditableCell value={tramo.fijo} onChange={(v) => updateEscala(activeSem, i, 'fijo', v)} />
+                                        <EditableCell value={tramo.fijo} onChange={(v) => updateEscala(activeEscalaMonth, i, 'fijo', v)} />
                                     </td>
                                     <td style={{ textAlign: 'center' }}>
                                         <span style={{ color: 'var(--text-accent)', fontWeight: 600 }}>
@@ -265,7 +277,7 @@ export default function ConfigParametros({ params, setParams, resetToDefaults })
                                         </span>
                                     </td>
                                     <td>
-                                        <EditableCell value={tramo.excedenteDe} onChange={(v) => updateEscala(activeSem, i, 'excedenteDe', v)} />
+                                        <EditableCell value={tramo.excedenteDe} onChange={(v) => updateEscala(activeEscalaMonth, i, 'excedenteDe', v)} />
                                     </td>
                                 </tr>
                             ))}

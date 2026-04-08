@@ -252,41 +252,126 @@ function preprocessEscalasText(text) {
     return merged.join('\n');
 }
 
+/**
+ * Parse ALL monthly escalas Art. 94 from a single ARCA PDF.
+ *
+ * ARCA PDFs contain up to 12 monthly accumulated tables. Each table
+ * corresponds to one month and is separated by the month name (e.g. ENERO, JULIO).
+ *
+ * The function detects month names as delimiters and collects the tramos
+ * that follow each month header. If a tramo appears BEFORE any month header,
+ * it belongs to the first month found.
+ *
+ * @param {string} text - Raw text extracted from the PDF
+ * @returns {Object} Object keyed by month index (0-11), each value is an array of tramo objects.
+ *                   Only months found in the PDF are included.
+ */
 export function parseEscalas(text) {
-    console.debug(`[parseEscalas] Looking for first tax bracket table (annual base). Total lines: ${text.split('\n').length}`);
+    console.debug(`[parseEscalas] Extracting monthly tables. Total chars: ${text.length}`);
 
     // Pre-process to recombine split lines (affects 2026+ PDFs)
     const normalizedText = preprocessEscalasText(text);
     const lines = normalizedText.split('\n').map(l => l.trim());
 
-    // Find the first line that parses as a tramo
-    const firstTramoIdx = lines.findIndex(l => parseTramoLine(l) !== null);
+    // Map month names to 0-based indices
+    const MONTH_TO_INDEX = {};
+    MONTH_NAMES.forEach((name, i) => { MONTH_TO_INDEX[name.toUpperCase()] = i; });
 
-    if (firstTramoIdx === -1) {
-        const preview = lines.slice(0, 30).join('\n');
-        console.error(`[parseEscalas] No tramos found in PDF. First 30 lines:\n`, preview);
-        throw new Error(`No se encontraron escalas del Art. 94 en el PDF.`);
-    }
+    const result = {};
+    let currentMonthIdx = null;
+    let currentTramos = [];
+    let orphanTramos = []; // tramos before any month header
 
-    const tramos = [];
-
-    // Walk downwards collecting all tramos for this first table
-    for (let i = firstTramoIdx; i < lines.length; i++) {
+    for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         if (!line) continue;
 
+        // Check if this line is a month name
+        const monthMatch = line.match(MONTH_LINE_RE);
+        if (monthMatch) {
+            // Save previous month's tramos
+            if (currentMonthIdx !== null && currentTramos.length > 0) {
+                result[currentMonthIdx] = currentTramos;
+            }
+            currentMonthIdx = MONTH_TO_INDEX[monthMatch[0].toUpperCase()];
+            currentTramos = [...orphanTramos]; // include any tramos found before this header
+            orphanTramos = [];
+            continue;
+        }
+
+        // Try to parse as a tramo line
         const tramo = parseTramoLine(line);
         if (tramo) {
-            tramos.push(tramo);
-            if (tramo.hasta === Infinity) break; // Finished the table
-        } else {
-            // If it's a month name randomly interspersed, just skip
-            if (MONTH_LINE_RE.test(line)) continue;
-            // Otherwise, if we hit another header or unrelated text, assume table is done
-            if (/Ganancia/i.test(line) || /Art/i.test(line)) break;
+            if (currentMonthIdx !== null) {
+                currentTramos.push(tramo);
+            } else {
+                orphanTramos.push(tramo);
+            }
+
+            // If this is the last tramo (hasta = Infinity), finalize current month
+            if (tramo.hasta === Infinity && currentMonthIdx !== null) {
+                result[currentMonthIdx] = currentTramos;
+                currentMonthIdx = null;
+                currentTramos = [];
+                orphanTramos = [];
+            }
+            continue;
+        }
+
+        // Skip unrelated text (headers, footers, etc.)
+        // But if we hit "Ganancia" or "Art" type text after collecting tramos, break
+        if (currentTramos.length > 0 && /^(Ganancia|GANANCIA|Escala|ESCALA)/i.test(line)) {
+            // Could be a new section, but keep going
         }
     }
 
-    console.debug(`[parseEscalas] Extracted ${tramos.length} brackets from annual table.`);
-    return tramos;
+    // Save last month if pending
+    if (currentMonthIdx !== null && currentTramos.length > 0) {
+        result[currentMonthIdx] = currentTramos;
+    }
+
+    // If we only got orphan tramos and no months detected, try to infer
+    // This handles PDFs where month names are glued to the first tramo line (Format B)
+    if (Object.keys(result).length === 0 && orphanTramos.length > 0) {
+        console.warn('[parseEscalas] No month headers found. Trying Format B (month glued to first number)');
+        // Fall back: try to extract month from first line of each block
+        let fallbackTramos = [];
+        for (const line of lines) {
+            if (!line) continue;
+            // Try extracting month name from beginning of line
+            const monthPrefix = line.match(/^(ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE|OCTUBRE|NOVIEMBRE|DICIEMBRE)/i);
+            if (monthPrefix) {
+                if (fallbackTramos.length > 0 && currentMonthIdx !== null) {
+                    result[currentMonthIdx] = fallbackTramos;
+                    fallbackTramos = [];
+                }
+                currentMonthIdx = MONTH_TO_INDEX[monthPrefix[0].toUpperCase()];
+                // Parse the rest of the line as a tramo
+                const restOfLine = line.substring(monthPrefix[0].length);
+                const tramo = parseTramoLine(restOfLine);
+                if (tramo) fallbackTramos.push(tramo);
+            } else {
+                const tramo = parseTramoLine(line);
+                if (tramo) fallbackTramos.push(tramo);
+                if (tramo?.hasta === Infinity && currentMonthIdx !== null) {
+                    result[currentMonthIdx] = fallbackTramos;
+                    fallbackTramos = [];
+                    currentMonthIdx = null;
+                }
+            }
+        }
+        if (currentMonthIdx !== null && fallbackTramos.length > 0) {
+            result[currentMonthIdx] = fallbackTramos;
+        }
+    }
+
+    const monthCount = Object.keys(result).length;
+    console.debug(`[parseEscalas] Extracted tables for ${monthCount} months: ${Object.keys(result).map(k => MONTH_NAMES[k]).join(', ')}`);
+
+    if (monthCount === 0) {
+        throw new Error('No se encontraron escalas del Art. 94 en el PDF. Verificá que el archivo sea correcto.');
+    }
+
+    return result;
 }
+

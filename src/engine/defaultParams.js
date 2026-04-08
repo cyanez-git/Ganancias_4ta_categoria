@@ -3,6 +3,24 @@
  * Based on ARCA official tables and RG 2025
  */
 
+/**
+ * Generate 12 monthly accumulated scale tables from an annual base table.
+ * Each monthly table = annual values × (m+1)/12.
+ * Used as fallback when real ARCA monthly values are not yet loaded.
+ */
+export function generateMonthlyScalesFromAnnual(annual) {
+    return Array.from({ length: 12 }, (_, m) => {
+        const factor = (m + 1) / 12;
+        return annual.map(t => ({
+            desde: +(t.desde * factor).toFixed(2),
+            hasta: t.hasta === Infinity ? Infinity : +(t.hasta * factor).toFixed(2),
+            fijo: +(t.fijo * factor).toFixed(2),
+            porcentaje: t.porcentaje,
+            excedenteDe: +(t.excedenteDe * factor).toFixed(2),
+        }));
+    });
+}
+
 export const DEFAULT_PARAMS_2025 = {
     year: 2025,
     label: 'Año Fiscal 2025',
@@ -29,31 +47,22 @@ export const DEFAULT_PARAMS_2025 = {
         },
     },
 
-    // ── Escalas Progresivas Art. 94 (TABLAS ANUALES) ───────────
-    escalas: {
-        sem1: [
-            { desde: 0, hasta: 1520371.68, fijo: 0, porcentaje: 0.05, excedenteDe: 0 },
-            { desde: 1520371.68, hasta: 3040743.36, fijo: 76018.56, porcentaje: 0.09, excedenteDe: 1520371.68 },
-            { desde: 3040743.36, hasta: 4561115.04, fijo: 212852.04, porcentaje: 0.12, excedenteDe: 3040743.36 },
-            { desde: 4561115.04, hasta: 6841672.56, fijo: 395296.68, porcentaje: 0.15, excedenteDe: 4561115.04 },
-            { desde: 6841672.56, hasta: 13683345.00, fijo: 737380.32, porcentaje: 0.19, excedenteDe: 6841672.56 },
-            { desde: 13683345.00, hasta: 20525017.56, fijo: 2037298.08, porcentaje: 0.23, excedenteDe: 13683345.00 },
-            { desde: 20525017.56, hasta: 30787526.40, fijo: 3610882.68, porcentaje: 0.27, excedenteDe: 20525017.56 },
-            { desde: 30787526.40, hasta: 46181289.48, fijo: 6381760.08, porcentaje: 0.31, excedenteDe: 30787526.40 },
-            { desde: 46181289.48, hasta: Infinity, fijo: 11153826.72, porcentaje: 0.35, excedenteDe: 46181289.48 },
-        ],
-        sem2: [
-            { desde: 0, hasta: 1520371.68, fijo: 0, porcentaje: 0.05, excedenteDe: 0 },
-            { desde: 1520371.68, hasta: 3040743.36, fijo: 76018.56, porcentaje: 0.09, excedenteDe: 1520371.68 },
-            { desde: 3040743.36, hasta: 4561115.04, fijo: 212852.04, porcentaje: 0.12, excedenteDe: 3040743.36 },
-            { desde: 4561115.04, hasta: 6841672.56, fijo: 395296.68, porcentaje: 0.15, excedenteDe: 4561115.04 },
-            { desde: 6841672.56, hasta: 13683345.00, fijo: 737380.32, porcentaje: 0.19, excedenteDe: 6841672.56 },
-            { desde: 13683345.00, hasta: 20525017.56, fijo: 2037298.08, porcentaje: 0.23, excedenteDe: 13683345.00 },
-            { desde: 20525017.56, hasta: 30787526.40, fijo: 3610882.68, porcentaje: 0.27, excedenteDe: 20525017.56 },
-            { desde: 30787526.40, hasta: 46181289.48, fijo: 6381760.08, porcentaje: 0.31, excedenteDe: 30787526.40 },
-            { desde: 46181289.48, hasta: Infinity, fijo: 11153826.72, porcentaje: 0.35, excedenteDe: 46181289.48 },
-        ],
-    },
+    // ── Escalas Progresivas Art. 94 (TABLAS MENSUALES ACUMULADAS) ──
+    // Cada entrada escalas[m] contiene los 9 tramos acumulados para el mes m.
+    // Los valores se obtienen directamente de los PDFs de ARCA.
+    // El default se genera proporcionalizando la tabla anual base.
+    escalas: generateMonthlyScalesFromAnnual([
+        { desde: 0, hasta: 1520371.68, fijo: 0, porcentaje: 0.05, excedenteDe: 0 },
+        { desde: 1520371.68, hasta: 3040743.36, fijo: 76018.56, porcentaje: 0.09, excedenteDe: 1520371.68 },
+        { desde: 3040743.36, hasta: 4561115.04, fijo: 212852.04, porcentaje: 0.12, excedenteDe: 3040743.36 },
+        { desde: 4561115.04, hasta: 6841672.56, fijo: 395296.68, porcentaje: 0.15, excedenteDe: 4561115.04 },
+        { desde: 6841672.56, hasta: 13683345.00, fijo: 737380.32, porcentaje: 0.19, excedenteDe: 6841672.56 },
+        { desde: 13683345.00, hasta: 20525017.56, fijo: 2037298.08, porcentaje: 0.23, excedenteDe: 13683345.00 },
+        { desde: 20525017.56, hasta: 30787526.40, fijo: 3610882.68, porcentaje: 0.27, excedenteDe: 20525017.56 },
+        { desde: 30787526.40, hasta: 46181289.48, fijo: 6381760.08, porcentaje: 0.31, excedenteDe: 30787526.40 },
+        { desde: 46181289.48, hasta: Infinity, fijo: 11153826.72, porcentaje: 0.35, excedenteDe: 46181289.48 },
+    ]),
+
 
     // ── Topes MoPRe mensuales ──────────────────────────────────
     topesMoPre: [

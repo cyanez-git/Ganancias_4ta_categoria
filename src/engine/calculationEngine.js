@@ -52,7 +52,6 @@ export function calculateAllMonths(monthsData, config, params) {
         const data = monthsData[m];
         const sem = getSemestre(m);
         const dedPersonales = params.deduccionesPersonales[sem];
-        const escalas = params.escalas[sem];
         const topeMoPre = params.topesMoPre[m];
 
         const totalIngresos =
@@ -266,17 +265,8 @@ export function calculateAllMonths(monthsData, config, params) {
         const gananciaNeta = Math.max(gananciaBrutaConSACAcum - deduccionesTotalesAcum, 0);
 
         // ── PASO 11: Impuesto Determinado ────────────────────────
-        // La tabla "escalas" es ANUAL. Necesitamos la tabla acumulada a este mes (m de 0 a 11).
-        const factorMes = (m + 1) / 12;
-        const escalasAcumuladasMes = escalas.map(t => ({
-            desde: t.desde * factorMes,
-            hasta: (t.hasta === Infinity) ? Infinity : t.hasta * factorMes,
-            fijo: t.fijo * factorMes,
-            porcentaje: t.porcentaje, // % se mantiene igual
-            excedenteDe: t.excedenteDe * factorMes
-        }));
-
-        const impuestoDeterminado = calcularImpuestoEscalas(gananciaNeta, escalasAcumuladasMes);
+        // La tabla escalas[m] ya viene acumulada para el mes desde ARCA
+        const impuestoDeterminado = calcularImpuestoEscalas(gananciaNeta, params.escalas[m]);
 
         // ── PASO 12-14: Retenciones ──────────────────────────────
         // Acumulamos retención neta: lo efectivamente retenido MENOS lo reintegrado

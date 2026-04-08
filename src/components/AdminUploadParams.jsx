@@ -3,7 +3,7 @@ import { db } from '../config/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { extractTextFromPDF } from '../engine/pdfParser';
 import { parseDeducciones, parseEscalas } from '../engine/pdfExtractionLogic';
-import { MONTHS_SHORT, DEFAULT_PARAMS_2025 } from '../engine/defaultParams';
+import { MONTHS_SHORT, DEFAULT_PARAMS_2025, generateMonthlyScalesFromAnnual } from '../engine/defaultParams';
 
 export default function AdminUploadParams() {
     const [step, setStep] = useState(1);
@@ -32,32 +32,38 @@ export default function AdminUploadParams() {
     const handleProcessFiles = async () => {
         setIsParsing(true);
         try {
-            const requiredFiles = ['ded_sem1', 'ded_sem2', 'esc_sem1', 'esc_sem2'];
+            const requiredFiles = ['ded_sem1', 'ded_sem2', 'escalas'];
             for (const f of requiredFiles) {
                 if (!files[f]) throw new Error(`Falta cargar el archivo: ${f}`);
             }
 
-            // Parse text from all 4 required PDFs
+            // Parse text from the 3 required PDFs
             const textDedS1 = await extractTextFromPDF(files.ded_sem1);
             const textDedS2 = await extractTextFromPDF(files.ded_sem2);
-            const textEscS1 = await extractTextFromPDF(files.esc_sem1);
-            const textEscS2 = await extractTextFromPDF(files.esc_sem2);
+            const textEscalas = await extractTextFromPDF(files.escalas);
 
-            // Execute Regex extractors
+            // Execute extractors
             const dedS1 = parseDeducciones(textDedS1);
             const dedS2 = parseDeducciones(textDedS2);
-            const escS1 = parseEscalas(textEscS1, 'ENERO');
-            const escS2 = parseEscalas(textEscS2, 'JULIO');
+            const escalasMap = parseEscalas(textEscalas);
+
+            // Build Array[12] from extracted months
+            // For any month not found in the PDF, use a proportionalized fallback
+            const fallbackAnnual = DEFAULT_PARAMS_2025.escalas[11]; // Dec = full annual
+            const fallbackMonthly = generateMonthlyScalesFromAnnual(fallbackAnnual);
+            const escalasArray = Array.from({ length: 12 }, (_, m) => {
+                return escalasMap[m] || fallbackMonthly[m];
+            });
+
+            const monthsFound = Object.keys(escalasMap).length;
+            console.info(`[AdminUpload] Extracted scales for ${monthsFound}/12 months from PDF.`);
 
             const dynamicParsedData = {
                 deduccionesPersonales: {
                     sem1: dedS1,
                     sem2: dedS2
                 },
-                escalas: {
-                    sem1: escS1,
-                    sem2: escS2
-                }
+                escalas: escalasArray
             };
             
             setParsedData(dynamicParsedData);
@@ -109,24 +115,20 @@ export default function AdminUploadParams() {
                         />
                     </div>
                     
-                    <p style={{ marginBottom: '15px' }}>Subí los 5 PDFs oficiales de ARCA/AFIP para procesarlos:</p>
+                    <p style={{ marginBottom: '15px' }}>Subí los 3 PDFs oficiales de ARCA/AFIP para procesarlos:</p>
                     
                     <div style={{ display: 'grid', gap: '15px' }}>
                         <div>
-                            <label className="form-label" style={{ fontSize: 'var(--font-sm)' }}>1. Deducciones Sem. 1</label>
+                            <label className="form-label" style={{ fontSize: 'var(--font-sm)' }}>1. Deducciones Sem. 1 (Art. 30)</label>
                             <input type="file" accept=".pdf" className="form-input" onChange={(e) => handleFileChange(e, 'ded_sem1')} />
                         </div>
                         <div>
-                            <label className="form-label" style={{ fontSize: 'var(--font-sm)' }}>2. Deducciones Sem. 2</label>
+                            <label className="form-label" style={{ fontSize: 'var(--font-sm)' }}>2. Deducciones Sem. 2 (Art. 30)</label>
                             <input type="file" accept=".pdf" className="form-input" onChange={(e) => handleFileChange(e, 'ded_sem2')} />
                         </div>
                         <div>
-                            <label className="form-label" style={{ fontSize: 'var(--font-sm)' }}>3. Escalas Sem. 1 (Art 94)</label>
-                            <input type="file" accept=".pdf" className="form-input" onChange={(e) => handleFileChange(e, 'esc_sem1')} />
-                        </div>
-                        <div>
-                            <label className="form-label" style={{ fontSize: 'var(--font-sm)' }}>4. Escalas Sem. 2 (Art 94)</label>
-                            <input type="file" accept=".pdf" className="form-input" onChange={(e) => handleFileChange(e, 'esc_sem2')} />
+                            <label className="form-label" style={{ fontSize: 'var(--font-sm)' }}>3. Escalas Art. 94 (contiene los 12 meses)</label>
+                            <input type="file" accept=".pdf" className="form-input" onChange={(e) => handleFileChange(e, 'escalas')} />
                         </div>
                     </div>
 

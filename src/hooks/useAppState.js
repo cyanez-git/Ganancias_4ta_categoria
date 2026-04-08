@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { DEFAULT_PARAMS_2025, createEmptyYearData, createDefaultConfig } from '../engine/defaultParams';
+import { DEFAULT_PARAMS_2025, createEmptyYearData, createDefaultConfig, generateMonthlyScalesFromAnnual } from '../engine/defaultParams';
 import { calculateAllMonths } from '../engine/calculationEngine';
 
 const STORAGE_KEY = 'ganancias-4ta-cat-data';
@@ -9,14 +9,39 @@ function loadFromStorage() {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
             const parsed = JSON.parse(saved);
-            // Restore Infinity values in escalas
             if (parsed.params) {
-                ['sem1', 'sem2'].forEach(sem => {
-                    if (parsed.params.escalas?.[sem]) {
-                        const last = parsed.params.escalas[sem].length - 1;
-                        if (last >= 0) parsed.params.escalas[sem][last].hasta = Infinity;
+                // Migrate old semester-based escalas to monthly Array[12]
+                if (parsed.params.escalas && !Array.isArray(parsed.params.escalas)) {
+                    console.info('[migration] Converting escalas from {sem1,sem2} to Array[12]');
+                    const sem1 = parsed.params.escalas.sem1;
+                    const sem2 = parsed.params.escalas.sem2 || sem1;
+                    // Restore Infinity on old format before converting
+                    [sem1, sem2].forEach(arr => {
+                        if (arr?.length) arr[arr.length - 1].hasta = Infinity;
+                    });
+                    parsed.params.escalas = Array.from({ length: 12 }, (_, m) => {
+                        const base = m < 6 ? sem1 : sem2;
+                        const factor = (m + 1) / 12;
+                        return base.map(t => ({
+                            desde: +(t.desde * factor).toFixed(2),
+                            hasta: t.hasta === Infinity ? Infinity : +(t.hasta * factor).toFixed(2),
+                            fijo: +(t.fijo * factor).toFixed(2),
+                            porcentaje: t.porcentaje,
+                            excedenteDe: +(t.excedenteDe * factor).toFixed(2),
+                        }));
+                    });
+                }
+                // Restore Infinity on monthly escalas (Array[12])
+                if (Array.isArray(parsed.params.escalas)) {
+                    for (const monthEscala of parsed.params.escalas) {
+                        if (monthEscala?.length) {
+                            const last = monthEscala[monthEscala.length - 1];
+                            if (last.hasta === 'Infinity' || last.hasta === null) {
+                                last.hasta = Infinity;
+                            }
+                        }
                     }
-                });
+                }
             }
             return parsed;
         }
