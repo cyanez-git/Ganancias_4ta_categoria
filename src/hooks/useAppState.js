@@ -112,10 +112,13 @@ export function useAppState() {
                     updated = true;
                 }
 
-                // Sync escalas (convert from Firestore format)
+                // Sync escalas (convert from Firestore object format to Array[12])
                 if (fbData.escalas) {
-                    patch.escalas = escalasFromFirestore(fbData.escalas);
-                    updated = true;
+                    const converted = escalasFromFirestore(fbData.escalas);
+                    if (converted) {
+                        patch.escalas = converted;
+                        updated = true;
+                    }
                 }
 
                 if (updated) {

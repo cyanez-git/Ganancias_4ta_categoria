@@ -42,24 +42,24 @@ export function escalasToFirestore(escalasArray) {
  * Convert Firestore escalas object back to Array[12].
  * Handles both old format { sem1, sem2 } and new format { "0": [...], "1": [...] }.
  * Restores Infinity from null values.
+ * Returns null for months not present in Firebase (caller handles the fallback).
  */
 export function escalasFromFirestore(escalasData) {
-    // New format: object with numeric string keys
+    // New format: object with numeric string keys { "0": [...], ..., "11": [...] }
     if (escalasData && !Array.isArray(escalasData) && !escalasData.sem1) {
         return Array.from({ length: 12 }, (_, m) => {
             const tramos = escalasData[m.toString()];
-            if (!tramos) return null;
+            if (!tramos) return null; // Missing month — caller decides fallback
             return tramos.map(t => ({
                 ...t,
                 hasta: t.hasta === null ? Infinity : t.hasta,
             }));
         });
     }
-    // Old format { sem1, sem2 } — should not happen from Firebase anymore, but handle gracefully
+    // Old format { sem1, sem2 }
     if (escalasData?.sem1) {
         const sem1 = escalasData.sem1;
         const sem2 = escalasData.sem2 || sem1;
-        // Restore Infinity
         [sem1, sem2].forEach(arr => {
             if (arr?.length) {
                 const last = arr[arr.length - 1];
@@ -79,7 +79,9 @@ export function escalasFromFirestore(escalasData) {
         });
     }
     // Already an array
-    if (Array.isArray(escalasData)) return escalasData;
+    if (Array.isArray(escalasData)) {
+        return escalasData.map(t => t ? t.map(tramo => ({ ...tramo, hasta: tramo.hasta === null ? Infinity : tramo.hasta })) : null);
+    }
     return null;
 }
 

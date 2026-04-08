@@ -266,7 +266,10 @@ export function calculateAllMonths(monthsData, config, params) {
 
         // ── PASO 11: Impuesto Determinado ────────────────────────
         // La tabla escalas[m] ya viene acumulada para el mes desde ARCA
-        const impuestoDeterminado = calcularImpuestoEscalas(gananciaNeta, params.escalas[m]);
+        const escalasDelMes = params.escalas?.[m];
+        const impuestoDeterminado = escalasDelMes
+            ? calcularImpuestoEscalas(gananciaNeta, escalasDelMes)
+            : 0;
 
         // ── PASO 12-14: Retenciones ──────────────────────────────
         // Acumulamos retención neta: lo efectivamente retenido MENOS lo reintegrado
