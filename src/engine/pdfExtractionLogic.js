@@ -294,7 +294,9 @@ export function parseEscalas(text) {
                 result[currentMonthIdx] = currentTramos;
             }
             currentMonthIdx = MONTH_TO_INDEX[monthMatch[0].toUpperCase()];
-            currentTramos = [...orphanTramos]; // include any tramos found before this header
+            // Fresh start for this month. 
+            // Discard orphanTramos (they are likely an annual summary table at the start of the PDF)
+            currentTramos = []; 
             orphanTramos = [];
             continue;
         }
